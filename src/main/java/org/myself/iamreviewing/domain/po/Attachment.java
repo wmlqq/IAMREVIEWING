@@ -1,6 +1,6 @@
-package domain.po;
+package org.myself.iamreviewing.domain.po;
 
-import domain.enums.FileType;
+import org.myself.iamreviewing.domain.enums.FileType;
 import lombok.Data;
 import lombok.NonNull;
 

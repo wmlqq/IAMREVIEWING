@@ -1,7 +1,7 @@
-package service;
+package org.myself.iamreviewing.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import domain.po.Attachment;
+import org.myself.iamreviewing.domain.po.Attachment;
 import org.springframework.stereotype.Service;
 
 @Service

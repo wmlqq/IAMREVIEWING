@@ -1,10 +1,10 @@
-package service.impl;
+package org.myself.iamreviewing.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import domain.po.Attachment;
-import mapper.AttachmentMapper;
+import org.myself.iamreviewing.domain.po.Attachment;
+import org.myself.iamreviewing.mapper.AttachmentMapper;
 import org.springframework.stereotype.Service;
-import service.AttachmentService;
+import org.myself.iamreviewing.service.AttachmentService;
 
 @Service
 public class AttachmentServiceImpl extends ServiceImpl<AttachmentMapper, Attachment> implements AttachmentService {

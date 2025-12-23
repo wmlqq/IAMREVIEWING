@@ -1,30 +1,25 @@
-package domain.po;
+package org.myself.iamreviewing.domain.vo;
 
 import cn.hutool.core.collection.ListUtil;
-import com.baomidou.mybatisplus.annotation.TableField;
-import domain.enums.DifiicultyLevel;
-import domain.enums.Memoried;
+import org.myself.iamreviewing.domain.enums.DifiicultyLevel;
+import org.myself.iamreviewing.domain.enums.Memoried;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NonNull;
-
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Data
-public class Point {
-    private Long id;
-    @NonNull
+@AllArgsConstructor
+@NoArgsConstructor
+public class PointVO {
     private String name;
-    @NonNull
     private String description;
-    @NonNull
     private String category="未分类";
     private final LocalDate createDate= LocalDate.now();
-    @NonNull
     private DifiicultyLevel difiicultyLevel= DifiicultyLevel.THREE;
-    @NonNull
     private Memoried memoried=Memoried.NO;
-    @TableField(exist = false)
-    private List<Attachment> attachments= ListUtil.empty();
+    private List<AttachmentVO> attachmentVOS= ListUtil.empty();
+
 }

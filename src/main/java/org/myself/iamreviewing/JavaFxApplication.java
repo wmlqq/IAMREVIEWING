@@ -3,8 +3,8 @@ package org.myself.iamreviewing;
 import javafx.application.Application;
 import javafx.stage.Stage;
 import org.springframework.context.ConfigurableApplicationContext;
-import service.AttachmentService;
-import service.PointService;
+import org.myself.iamreviewing.service.AttachmentService;
+import org.myself.iamreviewing.service.PointService;
 
 public class JavaFxApplication extends Application {
 

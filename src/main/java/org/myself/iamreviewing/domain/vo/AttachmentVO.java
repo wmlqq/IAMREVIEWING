@@ -1,6 +1,6 @@
-package domain.vo;
+package org.myself.iamreviewing.domain.vo;
 
-import domain.enums.FileType;
+import org.myself.iamreviewing.domain.enums.FileType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

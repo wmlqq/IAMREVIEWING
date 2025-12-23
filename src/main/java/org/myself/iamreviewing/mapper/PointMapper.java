@@ -1,7 +1,7 @@
-package mapper;
+package org.myself.iamreviewing.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import domain.po.Point;
+import org.myself.iamreviewing.domain.po.Point;
 
 public interface PointMapper extends BaseMapper<Point> {
 }
