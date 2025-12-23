@@ -13,6 +13,8 @@ public class Attachment {
     @NonNull
     private String filename;
     @NonNull
+    private Long pointId;
+    @NonNull
     private String filepath;
     @NonNull
     private FileType fileType;

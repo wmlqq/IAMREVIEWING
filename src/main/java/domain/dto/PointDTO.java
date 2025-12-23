@@ -1,19 +1,17 @@
-package domain.po;
+package domain.dto;
 
 import cn.hutool.core.collection.ListUtil;
-import com.baomidou.mybatisplus.annotation.TableField;
 import domain.enums.DifiicultyLevel;
 import domain.enums.Memoried;
-import lombok.Data;
-import lombok.NonNull;
-
+import lombok.*;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Data
-public class Point {
-    private Long id;
+@NoArgsConstructor
+@AllArgsConstructor
+public class PointDTO {
     @NonNull
     private String name;
     @NonNull
@@ -25,6 +23,6 @@ public class Point {
     private DifiicultyLevel difiicultyLevel= DifiicultyLevel.THREE;
     @NonNull
     private Memoried memoried=Memoried.NO;
-    @TableField(exist = false)
-    private List<Attachment> attachments= ListUtil.empty();
+    private List<AttachmentDTO> attachmentDTOS= ListUtil.empty();
+
 }
