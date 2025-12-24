@@ -8,10 +8,11 @@ spring:
 
 
 mybatis-plus:
-  type-aliases-package: domain.PO
+  type-aliases-package: org.myself.iamreviewing.domain.po
   configuration:
     map-underscore-to-camel-case: true
     cache-enabled: false
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
     db-config:
       id-type: auto

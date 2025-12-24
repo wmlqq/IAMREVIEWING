@@ -14,6 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PointVO {
+    private Long id;
     private String name;
     private String description;
     private String category="未分类";

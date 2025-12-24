@@ -11,6 +11,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AttachmentVO {
+    private Long id;
     private String filename;
     private String filepath;
     private FileType fileType;

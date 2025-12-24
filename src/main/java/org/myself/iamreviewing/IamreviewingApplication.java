@@ -2,10 +2,12 @@ package org.myself.iamreviewing;
 
 import javafx.application.Application;
 import lombok.Getter;
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
+@MapperScan("org.myself.iamreviewing.mapper")
 @SpringBootApplication
 public class IamreviewingApplication {
 
