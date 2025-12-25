@@ -217,6 +217,8 @@ public class MainController {
         if (savedPoint != null) {
             showSuccess("知识点保存成功");
             loadAllPoints();
+            // 更新分类列表，确保新分类能显示在选择框中
+            loadCategories();
             // 更新当前选中的知识点
             currentPoint = savedPoint;
         } else {

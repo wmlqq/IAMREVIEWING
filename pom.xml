@@ -119,17 +119,7 @@
             <version>5.2.5</version>
         </dependency>
         
-        <!-- 代码语法高亮依赖 -->
-        <dependency>
-            <groupId>com.fifesoft</groupId>
-            <artifactId>rsyntaxtextarea</artifactId>
-            <version>3.3.4</version>
-        </dependency>
-        <dependency>
-            <groupId>org.fxmisc.richtext</groupId>
-            <artifactId>richtextfx</artifactId>
-            <version>0.10.5</version>
-        </dependency>
+
     </dependencies>
 
     <build>
