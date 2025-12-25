@@ -18,6 +18,7 @@ public class AttachmentPreview extends VBox {
     private PdfPreviewer pdfPreviewer;
     private DocxPreviewer docxPreviewer;
     private TextPreviewer textPreviewer;
+    private CodePreviewer codePreviewer;
     private ImagePreviewer imagePreviewer;
     private AudioPreviewer audioPreviewer;
     private VideoPreviewer videoPreviewer;
@@ -39,6 +40,7 @@ public class AttachmentPreview extends VBox {
         pdfPreviewer = new PdfPreviewer();
         docxPreviewer = new DocxPreviewer();
         textPreviewer = new TextPreviewer();
+        codePreviewer = new CodePreviewer();
         imagePreviewer = new ImagePreviewer();
         audioPreviewer = new AudioPreviewer();
         videoPreviewer = new VideoPreviewer();
@@ -74,7 +76,7 @@ public class AttachmentPreview extends VBox {
                 }
                 break;
             case "代码":
-                textPreviewer.showPreview(file, this);
+                codePreviewer.showPreview(file, this);
                 break;
             case "图片":
                 imagePreviewer.showPreview(file, this);

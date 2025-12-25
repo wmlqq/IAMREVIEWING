@@ -177,15 +177,17 @@ public class VideoPreviewer implements Previewer {
                 Label largeTimeLabel = new Label("00:00 / 00:00");
                 largeTimeLabel.setStyle("-fx-font-family: 'Consolas', 'Monaco', monospace; -fx-font-size: 12px;");
 
-                // 放大视图的进度条更新
-                media.durationProperty().addListener((obs, oldDuration, newDuration) -> {
-                    largeProgressSlider.setMax(newDuration.toSeconds());
-                    // 内联格式化时间
-                    int seconds = (int) Math.floor(newDuration.toSeconds());
-                    int minutes = seconds / 60;
-                    seconds %= 60;
-                    String formattedDuration = String.format("%02d:%02d", minutes, seconds);
-                    largeTimeLabel.setText("00:00 / " + formattedDuration);
+                // 放大视图的进度条更新 - 监听新MediaPlayer的duration和currentTime
+                largeMediaPlayer.getMedia().durationProperty().addListener((obs, oldDuration, newDuration) -> {
+                    if (newDuration != null && !newDuration.isUnknown()) {
+                        largeProgressSlider.setMax(newDuration.toSeconds());
+                        // 内联格式化时间
+                        int seconds = (int) Math.floor(newDuration.toSeconds());
+                        int minutes = seconds / 60;
+                        seconds %= 60;
+                        String formattedDuration = String.format("%02d:%02d", minutes, seconds);
+                        largeTimeLabel.setText("00:00 / " + formattedDuration);
+                    }
                 });
 
                 largeMediaPlayer.currentTimeProperty().addListener((obs, oldTime, newTime) -> {
@@ -197,7 +199,12 @@ public class VideoPreviewer implements Previewer {
                         currentSeconds %= 60;
                         String formattedCurrent = String.format("%02d:%02d", currentMinutes, currentSeconds);
 
-                        int totalSeconds = (int) Math.floor(media.getDuration().toSeconds());
+                        // 使用新MediaPlayer的duration，避免依赖原始media对象
+                        javafx.util.Duration totalDuration = largeMediaPlayer.getMedia().getDuration();
+                        int totalSeconds = 0;
+                        if (totalDuration != null && !totalDuration.isUnknown()) {
+                            totalSeconds = (int) Math.floor(totalDuration.toSeconds());
+                        }
                         int totalMinutes = totalSeconds / 60;
                         totalSeconds %= 60;
                         String formattedTotal = String.format("%02d:%02d", totalMinutes, totalSeconds);
@@ -224,7 +231,12 @@ public class VideoPreviewer implements Previewer {
                         currentSeconds %= 60;
                         String formattedCurrent = String.format("%02d:%02d", currentMinutes, currentSeconds);
 
-                        int totalSeconds = (int) Math.floor(media.getDuration().toSeconds());
+                        // 使用新MediaPlayer的duration，避免依赖原始media对象
+                        javafx.util.Duration totalDuration = largeMediaPlayer.getMedia().getDuration();
+                        int totalSeconds = 0;
+                        if (totalDuration != null && !totalDuration.isUnknown()) {
+                            totalSeconds = (int) Math.floor(totalDuration.toSeconds());
+                        }
                         int totalMinutes = totalSeconds / 60;
                         totalSeconds %= 60;
                         String formattedTotal = String.format("%02d:%02d", totalMinutes, totalSeconds);
@@ -243,6 +255,12 @@ public class VideoPreviewer implements Previewer {
                 VBox.setVgrow(largeMediaView, Priority.ALWAYS);
 
                 stage.setScene(new javafx.scene.Scene(largeVBox, 900, 600));
+                
+                // 添加关闭事件监听器，停止视频播放
+                stage.setOnCloseRequest(ev -> {
+                    largeMediaPlayer.stop();
+                });
+                
                 stage.show();
             });
 
