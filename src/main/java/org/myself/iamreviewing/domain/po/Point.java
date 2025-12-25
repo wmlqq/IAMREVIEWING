@@ -2,6 +2,8 @@ package org.myself.iamreviewing.domain.po;
 
 import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.annotation.TableField;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.myself.iamreviewing.domain.enums.DifiicultyLevel;
 import org.myself.iamreviewing.domain.enums.Memoried;
 import lombok.Data;
@@ -12,6 +14,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Data
+@NoArgsConstructor
 public class Point {
     private Long id;
     @NonNull

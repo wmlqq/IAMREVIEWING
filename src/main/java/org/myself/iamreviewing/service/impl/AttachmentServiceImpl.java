@@ -3,6 +3,7 @@ package org.myself.iamreviewing.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.NoArgsConstructor;
 import org.myself.iamreviewing.domain.dto.AttachmentDTO;
 import org.myself.iamreviewing.domain.po.Attachment;
 import org.myself.iamreviewing.domain.po.Point;
@@ -15,6 +16,7 @@ import org.myself.iamreviewing.service.AttachmentService;
 import java.util.List;
 
 @Service
+@NoArgsConstructor
 public class AttachmentServiceImpl extends ServiceImpl<AttachmentMapper, Attachment> implements AttachmentService {
     @Override
     public List<AttachmentVO> getByPointId(Long id) {
@@ -35,6 +37,7 @@ public class AttachmentServiceImpl extends ServiceImpl<AttachmentMapper, Attachm
     }
 
     private  List<AttachmentVO> convertToVO(List<Attachment> list) {
+        if (list == null) {return List.of();}
         return BeanUtil.copyToList(list, AttachmentVO.class);
     }
 }

@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.myself.iamreviewing.service.PointService;
 
+import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -24,7 +25,7 @@ import java.util.stream.Collectors;
 public class PointServiceImpl extends ServiceImpl<PointMapper, Point> implements PointService {
 
     @Autowired
-    private static AttachmentService attachmentService;
+    private  AttachmentService attachmentService;
 
     //获取所有分类
     @Override
@@ -88,8 +89,8 @@ public class PointServiceImpl extends ServiceImpl<PointMapper, Point> implements
     }
 
 
-    public static List<PointVO> convertToVO(List<Point> points) {
-        if(points==null||points.isEmpty()){return null;}
+    public  List<PointVO> convertToVO(List<Point> points) {
+        if(points==null||points.isEmpty()){return List.of();}
 
         List<PointVO> pointVOS = BeanUtil.copyToList(points, PointVO.class);
 

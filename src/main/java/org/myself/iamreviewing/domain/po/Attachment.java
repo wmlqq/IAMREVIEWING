@@ -1,5 +1,6 @@
 package org.myself.iamreviewing.domain.po;
 
+import lombok.NoArgsConstructor;
 import org.myself.iamreviewing.domain.enums.FileType;
 import lombok.Data;
 import lombok.NonNull;
@@ -7,6 +8,7 @@ import lombok.NonNull;
 import java.time.LocalDate;
 
 @Data
+@NoArgsConstructor
 public class Attachment {
 
     private Long id;

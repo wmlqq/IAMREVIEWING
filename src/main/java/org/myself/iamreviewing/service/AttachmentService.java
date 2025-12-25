@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
 public interface AttachmentService extends IService<Attachment> {
     List<AttachmentVO> getByPointId(Long id);
 

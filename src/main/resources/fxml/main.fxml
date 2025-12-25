@@ -2,14 +2,10 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
-<?import javafx.scene.media.MediaView?>
-<?import javafx.scene.image.ImageView?>
-
 <BorderPane xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.myself.iamreviewing.controller.MainController">
     <!-- 顶部工具栏 -->
     <top>
-        <VBox spacing="10" padding="10">
+        <VBox spacing="10">
             <HBox spacing="10" alignment="CENTER_LEFT">
                 <TextField fx:id="searchField" promptText="搜索知识点..." prefWidth="300" onAction="#searchPoints" />
                 <Button fx:id="searchBtn" text="搜索" onAction="#searchPoints" />
@@ -22,12 +18,12 @@
 
     <!-- 主内容区 -->
     <center>
-        <SplitPane dividerPositions="0.3" orientation="HORIZONTAL">
+        <SplitPane dividerPositions="0.3">
             <!-- 左侧知识点列表 -->
             <VBox fx:id="leftPanel">
-                <Label text="知识点列表" font="16px Arial Bold" padding="10" />
+                <Label text="知识点列表" />
                 <ListView fx:id="pointListView" prefHeight="600" onMouseClicked="#onPointSelectionChanged" />
-                <HBox spacing="10" padding="10">
+                <HBox spacing="10">
                     <Button fx:id="deletePointBtn" text="删除知识点" onAction="#deletePoint" disable="true" />
                     <Button fx:id="refreshBtn" text="刷新列表" onAction="#loadAllPoints" />
                 </HBox>
@@ -37,13 +33,15 @@
             <TabPane fx:id="rightPanel" tabClosingPolicy="UNAVAILABLE">
                 <!-- 知识点详情标签页 -->
                 <Tab text="知识点详情">
-                    <VBox spacing="10" padding="10">
+                    <VBox spacing="10">
                         <!-- 知识点基本信息 -->
                         <GridPane hgap="10" vgap="10">
-                            <ColumnConstraints prefWidth="100" />
-                            <ColumnConstraints prefWidth="300" />
-                            <ColumnConstraints prefWidth="100" />
-                            <ColumnConstraints prefWidth="300" />
+                            <columnConstraints>
+                                <ColumnConstraints prefWidth="100" />
+                                <ColumnConstraints prefWidth="300" />
+                                <ColumnConstraints prefWidth="100" />
+                                <ColumnConstraints prefWidth="300" />
+                            </columnConstraints>
 
                             <Label text="名称:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
                             <TextField fx:id="pointNameField" GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.columnSpan="3" />
@@ -65,7 +63,7 @@
                         </GridPane>
 
                         <!-- 操作按钮 -->
-                        <HBox spacing="10" alignment="CENTER_RIGHT" padding="10">
+                        <HBox spacing="10" alignment="CENTER_RIGHT">
                             <Button fx:id="savePointBtn" text="保存知识点" onAction="#savePoint" />
                             <Button fx:id="clearFormBtn" text="清空表单" onAction="#clearForm" />
                         </HBox>
@@ -74,31 +72,33 @@
 
                 <!-- 附件管理标签页 -->
                 <Tab text="附件管理">
-                    <VBox spacing="10" padding="10">
+                    <VBox spacing="10">
                         <!-- 附件列表 -->
-                        <HBox spacing="10" alignment="CENTER_LEFT" padding="5">
-                            <Label text="附件列表" font="14px Arial Bold" />
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Label text="附件列表" />
                             <Button fx:id="uploadAttachBtn" text="上传附件" onAction="#uploadAttachment" />
                             <Button fx:id="deleteAttachBtn" text="删除附件" onAction="#deleteAttachment" disable="true" />
                         </HBox>
                         <ListView fx:id="attachmentListView" prefHeight="200" onMouseClicked="#onAttachmentSelectionChanged" />
 
                         <!-- 附件预览区 -->
-                        <Label text="附件预览" font="14px Arial Bold" padding="5" />
+                        <Label text="附件预览" />
                         <BorderPane fx:id="previewContainer" prefHeight="300" style="-fx-border-color: #ccc; -fx-border-width: 1px; -fx-border-radius: 4px;">
                             <center>
-                                <VBox fx:id="previewContent" alignment="CENTER" spacing="10" padding="20">
+                                <VBox fx:id="previewContent" alignment="CENTER" spacing="10">
                                     <Label text="请选择一个附件进行预览" />
                                 </VBox>
                             </center>
                         </BorderPane>
 
                         <!-- 附件信息 -->
-                        <GridPane fx:id="attachmentInfo" hgap="10" vgap="5" padding="5">
-                            <ColumnConstraints prefWidth="100" />
-                            <ColumnConstraints prefWidth="200" />
-                            <ColumnConstraints prefWidth="100" />
-                            <ColumnConstraints prefWidth="200" />
+                        <GridPane fx:id="attachmentInfo" hgap="10" vgap="5">
+                            <columnConstraints>
+                                <ColumnConstraints prefWidth="100" />
+                                <ColumnConstraints prefWidth="200" />
+                                <ColumnConstraints prefWidth="100" />
+                                <ColumnConstraints prefWidth="200" />
+                            </columnConstraints>
 
                             <Label text="文件名:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
                             <Label fx:id="attachFilename" GridPane.rowIndex="0" GridPane.columnIndex="1" />

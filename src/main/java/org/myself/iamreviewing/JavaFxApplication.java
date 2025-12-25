@@ -38,7 +38,7 @@ public class JavaFxApplication extends Application {
         Scene scene = new Scene(root, 1200, 800);
         
         // 设置主舞台属性
-        primaryStage.setTitle("知识点复习系统");
+        primaryStage.setTitle("I am Reviewing!!!");
         primaryStage.setScene(scene);
         primaryStage.setMinWidth(1000);
         primaryStage.setMinHeight(600);
