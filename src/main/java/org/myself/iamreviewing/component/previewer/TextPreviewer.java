@@ -82,9 +82,7 @@ public class TextPreviewer implements Previewer {
                 String content = new String(bytes, Charset.forName(charset));
 
                 // 在UI线程中更新文本
-                Platform.runLater(() -> {
-                    textArea.setText(content);
-                });
+                Platform.runLater(() -> textArea.setText(content));
             } catch (IOException e) {
                 showError("读取文件内容失败: " + e.getMessage(), parentContainer);
             }

@@ -66,9 +66,7 @@ public class ImagePreviewer implements Previewer {
         Button rotateBtn = new Button("旋转");
 
         // 旋转功能
-        rotateBtn.setOnAction(e -> {
-            imageView.setRotate(imageView.getRotate() + 90);
-        });
+        rotateBtn.setOnAction(e -> imageView.setRotate(imageView.getRotate() + 90));
 
         // 放大查看
         enlargeBtn.setOnAction(e -> {
@@ -98,9 +96,7 @@ public class ImagePreviewer implements Previewer {
 
             // 放大视图的旋转按钮
             Button largeRotateBtn = new Button("旋转");
-            largeRotateBtn.setOnAction(ev -> {
-                largeImageView.setRotate(largeImageView.getRotate() + 90);
-            });
+            largeRotateBtn.setOnAction(ev -> largeImageView.setRotate(largeImageView.getRotate() + 90));
 
             // 添加缩放控制
             ComboBox<String> zoomCombo = new ComboBox<>();

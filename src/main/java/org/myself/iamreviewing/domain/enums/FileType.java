@@ -9,7 +9,9 @@ public enum FileType {
     IMAGE(2,"图片"),
     VIDEO(3,"视频"),
     AUDIO(4,"音频"),
-    CODE(5,"代码");
+    CODE(5,"代码"),
+    PDF(6,"PDF"),
+    DOCX(7,"DOCX");
 
     @EnumValue
     private final Integer code;

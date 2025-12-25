@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+
 import javafx.embed.swing.SwingFXUtils;
 
 /**
@@ -130,9 +130,7 @@ public class PdfPreviewer implements Previewer {
 
                 // 添加放大查看按钮
                 Button enlargeBtn = new Button("放大查看");
-                enlargeBtn.setOnAction(e -> {
-                    showEnlargeView(finalFile, totalPages);
-                });
+                enlargeBtn.setOnAction(e -> showEnlargeView(finalFile, totalPages));
 
                 // 添加页码信息
                 Label pageInfoLabel = new Label("共 " + pageCount + " 页");

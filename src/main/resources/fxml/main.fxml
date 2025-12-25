@@ -22,8 +22,9 @@
             <!-- 左侧知识点列表 -->
             <VBox fx:id="leftPanel">
                 <Label text="知识点列表" />
-                <ListView fx:id="pointListView" prefHeight="600" onMouseClicked="#onPointSelectionChanged" />
+                <ListView fx:id="pointListView" prefHeight="600" onMouseClicked="#onPointSelectionChanged" onMousePressed="#handlePointMousePressed" />
                 <HBox spacing="10">
+                    <Button fx:id="viewDetailBtn" text="查看详情" onAction="#viewPointDetail" />
                     <Button fx:id="deletePointBtn" text="删除知识点" onAction="#deletePoint" disable="true" />
                     <Button fx:id="refreshBtn" text="刷新列表" onAction="#loadAllPoints" />
                 </HBox>

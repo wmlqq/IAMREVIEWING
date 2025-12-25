@@ -84,9 +84,7 @@ public class AudioPreviewer implements Previewer {
             });
 
             // 进度条拖动
-            progressSlider.setOnMousePressed(e -> {
-                mediaPlayer.pause();
-            });
+            progressSlider.setOnMousePressed(e -> mediaPlayer.pause());
 
             progressSlider.setOnMouseReleased(e -> {
                 mediaPlayer.seek(javafx.util.Duration.seconds(progressSlider.getValue()));
@@ -120,9 +118,7 @@ public class AudioPreviewer implements Previewer {
             parentContainer.getChildren().addAll(title, controls);
 
             // 清理资源
-            mediaPlayer.setOnEndOfMedia(() -> {
-                playBtn.setText("播放");
-            });
+            mediaPlayer.setOnEndOfMedia(() -> playBtn.setText("播放"));
 
         } catch (Exception e) {
             showError("加载音频失败: " + e.getMessage(), parentContainer);

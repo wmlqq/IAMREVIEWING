@@ -56,9 +56,7 @@ public class VideoPreviewer implements Previewer {
             Button rotateBtn = new Button("旋转");
 
             // 旋转功能
-            rotateBtn.setOnAction(e -> {
-                mediaView.setRotate(mediaView.getRotate() + 90);
-            });
+            rotateBtn.setOnAction(e -> mediaView.setRotate(mediaView.getRotate() + 90));
 
             // 进度条
             Slider progressSlider = new Slider(0, 1, 0);
@@ -101,9 +99,7 @@ public class VideoPreviewer implements Previewer {
             });
 
             // 进度条拖动
-            progressSlider.setOnMousePressed(e -> {
-                mediaPlayer.pause();
-            });
+            progressSlider.setOnMousePressed(e -> mediaPlayer.pause());
 
             progressSlider.setOnMouseReleased(e -> {
                 mediaPlayer.seek(javafx.util.Duration.seconds(progressSlider.getValue()));
@@ -163,9 +159,7 @@ public class VideoPreviewer implements Previewer {
                 });
 
                 Button largeRotateBtn = new Button("旋转");
-                largeRotateBtn.setOnAction(ev -> {
-                    largeMediaView.setRotate(largeMediaView.getRotate() + 90);
-                });
+                largeRotateBtn.setOnAction(ev -> largeMediaView.setRotate(largeMediaView.getRotate() + 90));
 
                 // 放大视图的进度条
                 Slider largeProgressSlider = new Slider(0, 1, 0);
@@ -213,9 +207,7 @@ public class VideoPreviewer implements Previewer {
                     }
                 });
 
-                largeProgressSlider.setOnMousePressed(ev -> {
-                    largeMediaPlayer.pause();
-                });
+                largeProgressSlider.setOnMousePressed(ev -> largeMediaPlayer.pause());
 
                 largeProgressSlider.setOnMouseReleased(ev -> {
                     largeMediaPlayer.seek(javafx.util.Duration.seconds(largeProgressSlider.getValue()));
@@ -257,9 +249,7 @@ public class VideoPreviewer implements Previewer {
                 stage.setScene(new javafx.scene.Scene(largeVBox, 900, 600));
                 
                 // 添加关闭事件监听器，停止视频播放
-                stage.setOnCloseRequest(ev -> {
-                    largeMediaPlayer.stop();
-                });
+                stage.setOnCloseRequest(ev -> largeMediaPlayer.stop());
                 
                 stage.show();
             });
@@ -279,9 +269,7 @@ public class VideoPreviewer implements Previewer {
             parentContainer.getChildren().addAll(title, scrollPane, controls);
 
             // 清理资源
-            mediaPlayer.setOnEndOfMedia(() -> {
-                playBtn.setText("播放");
-            });
+            mediaPlayer.setOnEndOfMedia(() -> playBtn.setText("播放"));
 
         } catch (Exception e) {
             showError("加载视频失败: " + e.getMessage(), parentContainer);

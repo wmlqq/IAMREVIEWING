@@ -1,16 +1,19 @@
-package org.myself.iamreviewing.component.previewer;
+package org.myself.iamreviewing.component;
 
 import javafx.application.Platform;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import javafx.scene.media.MediaView;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
-import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,11 +24,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 代码文件预览器，支持语法高亮
+ * 详情页附件查看器
+ * 专门用于知识点详情页的附件展示，按照用户要求的布局样式显示附件内容
  */
-public class CodePreviewer implements Previewer {
+public class DetailAttachmentViewer extends VBox {
 
-    // 语法高亮规则
+    // 语法高亮规则（参考CodePreviewer）
     private static final Map<String, LanguageSyntax> LANGUAGE_SYNTAX_MAP = new HashMap<>();
     
     static {
@@ -100,109 +104,177 @@ public class CodePreviewer implements Previewer {
                                       String multiLineCommentEnd) {
 
     }
-
-    @Override
-    public void showPreview(File file, VBox parentContainer) {
-        Label title = new Label("代码预览 - " + file.getName());
-        title.setStyle("-fx-font-weight: bold;");
-
-        // 在JavaFX应用线程中创建UI组件
+    
+    public DetailAttachmentViewer() {
+        this.setSpacing(10);
+        this.setStyle("-fx-padding: 0px;");
+    }
+    
+    /**
+     * 显示文本文件内容
+     */
+    public void showTextFile(File file) {
         Platform.runLater(() -> {
-            VBox codeContent = new VBox(10);
-            codeContent.setAlignment(Pos.CENTER);
-            codeContent.setStyle("-fx-padding: 10px;");
-
-            // 添加加载中提示
-            Label loadingLabel = new Label("正在加载代码文件...");
-            codeContent.getChildren().add(loadingLabel);
-            parentContainer.getChildren().addAll(title, codeContent);
-
-            // 异步加载代码内容
-            new Thread(() -> {
-                try {
-                    // 读取文件内容
-                    String content = Files.readString(file.toPath(), StandardCharsets.UTF_8);
-                    String fileExtension = getFileExtension(file.getName());
-                    
-                    // 在JavaFX应用线程中更新UI
-                    Platform.runLater(() -> {
-                        // 创建代码渲染区域
-                        TextFlow textFlow = new TextFlow();
-                        textFlow.setStyle(
-                                "-fx-background-color: #1e1e1e; " +
-                                "-fx-padding: 10px; " +
-                                "-fx-font-family: 'Consolas', 'Monaco', 'Courier New', monospace; " +
-                                "-fx-font-size: 14px;"
-                        );
-                        
-                        // 语法高亮渲染
-                        syntaxHighlight(textFlow, content, fileExtension);
-                        
-                        // 创建JavaFX滚动面板
-                        ScrollPane fxScrollPane = new ScrollPane(textFlow);
-                        fxScrollPane.setFitToWidth(true);
-                        fxScrollPane.setFitToHeight(true);
-                        fxScrollPane.setStyle("-fx-background-color: #f0f0f0;");
-                        
-                        // 创建放大查看按钮
-                        Button enlargeBtn = new Button("放大查看");
-                        enlargeBtn.setOnAction(e -> showEnlargeView(file, content, fileExtension));
-                        
-                        // 更新UI
-                        codeContent.getChildren().clear();
-                        codeContent.getChildren().addAll(enlargeBtn, fxScrollPane);
-                        VBox.setVgrow(fxScrollPane, Priority.ALWAYS);
-                    });
-                } catch (IOException e) {
-                    String errorMsg = "加载代码文件失败: " + e.getMessage();
-                    System.err.println(errorMsg);
-                    e.printStackTrace();
-                    
-                    Platform.runLater(() -> {
-                        codeContent.getChildren().clear();
-                        showError(errorMsg, codeContent);
-                    });
-                }
-            }).start();
+            try {
+                // 读取文件内容
+                String content = Files.readString(file.toPath(), StandardCharsets.UTF_8);
+                
+                // 创建文本显示区域
+                TextFlow textFlow = new TextFlow();
+                textFlow.setStyle(
+                        "-fx-padding: 5px; " +
+                        "-fx-font-family: 'Microsoft YaHei', 'SimSun', serif; " +
+                        "-fx-font-size: 14px;"
+                );
+                
+                // 普通文本，直接显示
+                Text text = new Text(content);
+                textFlow.getChildren().add(text);
+                
+                // 创建滚动面板
+                ScrollPane scrollPane = new ScrollPane(textFlow);
+                scrollPane.setFitToWidth(true);
+                scrollPane.setFitToHeight(true);
+                scrollPane.setStyle("-fx-background-color: transparent; -fx-border: none;");
+                scrollPane.setPrefHeight(200);
+                VBox.setVgrow(scrollPane, Priority.ALWAYS);
+                
+                this.getChildren().add(scrollPane);
+            } catch (IOException e) {
+                showError("读取文件失败: " + e.getMessage());
+            }
         });
     }
     
     /**
-     * 显示放大查看窗口
+     * 显示代码文件内容，支持语法高亮
      */
-    private void showEnlargeView(File file, String content, String fileExtension) {
-        Stage stage = new Stage();
-        stage.setTitle("代码放大查看 - " + file.getName());
-        stage.setMinWidth(800);
-        stage.setMinHeight(600);
-        
-        VBox largeVBox = new VBox(10);
-        largeVBox.setStyle("-fx-padding: 10px;");
-        
-        // 在JavaFX应用线程中更新UI
+    public void showCodeFile(File file) {
         Platform.runLater(() -> {
-            // 创建代码渲染区域
-            TextFlow textFlow = new TextFlow();
-            textFlow.setStyle(
-                    "-fx-background-color: #1e1e1e; " +
-                    "-fx-padding: 15px; " +
-                    "-fx-font-family: 'Consolas', 'Monaco', 'Courier New', monospace; " +
-                    "-fx-font-size: 16px;"
+            try {
+                // 读取文件内容
+                String content = Files.readString(file.toPath(), StandardCharsets.UTF_8);
+                String fileExtension = getFileExtension(file.getName());
+                
+                // 创建代码渲染区域
+                TextFlow textFlow = new TextFlow();
+                textFlow.setStyle(
+                        "-fx-background-color: #1e1e1e; " +
+                        "-fx-padding: 10px; " +
+                        "-fx-font-family: 'Consolas', 'Monaco', 'Courier New', monospace; " +
+                        "-fx-font-size: 14px;"
+                );
+                
+                // 语法高亮渲染
+                syntaxHighlight(textFlow, content, fileExtension);
+                
+                // 创建滚动面板
+                ScrollPane scrollPane = new ScrollPane(textFlow);
+                scrollPane.setFitToWidth(true);
+                scrollPane.setFitToHeight(true);
+                scrollPane.setStyle("-fx-background-color: transparent; -fx-border: none;");
+                scrollPane.setPrefHeight(300);
+                VBox.setVgrow(scrollPane, Priority.ALWAYS);
+                
+                this.getChildren().add(scrollPane);
+            } catch (IOException e) {
+                showError("读取代码文件失败: " + e.getMessage());
+            }
+        });
+    }
+    
+    /**
+     * 显示图片文件
+     */
+    public void showImageFile(File file) {
+        Platform.runLater(() -> {
+            try {
+                ImageView imageView = new ImageView();
+                imageView.setPreserveRatio(true);
+                
+                Image image = new Image(file.toURI().toString());
+                imageView.setImage(image);
+                
+                // 根据图片实际尺寸动态调整显示大小
+                double imageWidth = image.getWidth();
+                double imageHeight = image.getHeight();
+                
+                // 计算合适的显示尺寸，最大宽度800，最大高度500
+                double displayWidth, displayHeight;
+                if (imageWidth > imageHeight) {
+                    // 宽图
+                    displayWidth = Math.min(imageWidth, 800);
+                    displayHeight = (displayWidth / imageWidth) * imageHeight;
+                } else {
+                    // 高图或方图
+                    displayHeight = Math.min(imageHeight, 500);
+                    displayWidth = (displayHeight / imageHeight) * imageWidth;
+                }
+                
+                imageView.setFitWidth(displayWidth);
+                imageView.setFitHeight(displayHeight);
+                
+                this.getChildren().add(imageView);
+            } catch (Exception e) {
+                showError("加载图片失败: " + e.getMessage());
+            }
+        });
+    }
+    
+    /**
+     * 显示视频文件
+     */
+    public void showVideoFile(File file) {
+        Platform.runLater(() -> {
+            try {
+                Media media = new Media(file.toURI().toString());
+                MediaPlayer mediaPlayer = new MediaPlayer(media);
+                ScrollPane scrollPane = getScrollPane(mediaPlayer);
+                VBox.setVgrow(scrollPane, Priority.ALWAYS);
+                
+                this.getChildren().add(scrollPane);
+            } catch (Exception e) {
+                showError("加载视频失败: " + e.getMessage());
+            }
+        });
+    }
+
+    private static ScrollPane getScrollPane(MediaPlayer mediaPlayer) {
+        MediaView mediaView = new MediaView(mediaPlayer);
+
+        mediaView.setPreserveRatio(true);
+        mediaView.setFitWidth(800);
+        mediaView.setFitHeight(500);
+
+        // 创建滚动面板
+        ScrollPane scrollPane = new ScrollPane(mediaView);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setStyle("-fx-background-color: transparent; -fx-border: none;");
+        return scrollPane;
+    }
+
+    /**
+     * 显示特殊文件（使用嵌套框）
+     */
+    public void showSpecialFile(File file, String fileType) {
+        Platform.runLater(() -> {
+            // 特殊文件类型，使用嵌套框
+            VBox specialContainer = new VBox();
+            specialContainer.setStyle(
+                    "-fx-background-color: #f9f9f9; " +
+                    "-fx-border: 1px solid #e0e0e0; " +
+                    "-fx-border-radius: 4px; " +
+                    "-fx-padding: 10px; " +
+                    "-fx-margin-bottom: 15px;"
             );
             
-            // 语法高亮渲染
-            syntaxHighlight(textFlow, content, fileExtension);
+            // 使用现有的AttachmentPreview处理特殊文件
+            AttachmentPreview preview = new AttachmentPreview();
+            preview.showPreview(file.getAbsolutePath(), fileType);
             
-            // 创建JavaFX滚动面板
-            ScrollPane fxScrollPane = new ScrollPane(textFlow);
-            fxScrollPane.setFitToWidth(true);
-            fxScrollPane.setFitToHeight(true);
-            VBox.setVgrow(fxScrollPane, Priority.ALWAYS);
-            
-            largeVBox.getChildren().add(fxScrollPane);
-            
-            stage.setScene(new javafx.scene.Scene(largeVBox, 900, 700));
-            stage.show();
+            specialContainer.getChildren().add(preview);
+            this.getChildren().add(specialContainer);
         });
     }
     
@@ -324,12 +396,19 @@ public class CodePreviewer implements Previewer {
             }
         }
     }
-
+    
     /**
-         * 文本片段类
-         */
-        private record TextSegment(String text, Color color) {
-
+     * 显示错误信息
+     */
+    private void showError(String message) {
+        Platform.runLater(() -> {
+            Label errorLabel = new Label(message);
+            errorLabel.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+            errorLabel.setWrapText(true);
+            errorLabel.setAlignment(Pos.CENTER);
+            
+            this.getChildren().add(errorLabel);
+        });
     }
     
     /**
@@ -342,16 +421,10 @@ public class CodePreviewer implements Previewer {
         }
         return fileName.substring(lastDotIndex).toLowerCase();
     }
-    
+
     /**
-     * 显示错误信息
-     */
-    private void showError(String message, VBox container) {
-        Label errorLabel = new Label(message);
-        errorLabel.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
-        errorLabel.setWrapText(true);
-        errorLabel.setAlignment(Pos.CENTER);
-        
-        container.getChildren().add(errorLabel);
+         * 文本片段类
+         */
+        private record TextSegment(String text, Color color) {
     }
 }

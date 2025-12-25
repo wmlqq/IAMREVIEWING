@@ -1,10 +1,15 @@
 package org.myself.iamreviewing.controller;
 
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 import org.myself.iamreviewing.component.AttachmentPreview;
 import org.myself.iamreviewing.domain.dto.AttachmentDTO;
 import org.myself.iamreviewing.domain.dto.PointDTO;
@@ -19,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -271,6 +277,55 @@ public class MainController {
             deletePointBtn.setDisable(false);
         } else {
             deletePointBtn.setDisable(true);
+        }
+    }
+    
+    // 查看知识点详情
+    @FXML
+    private void viewPointDetail() {
+        currentPoint = pointListView.getSelectionModel().getSelectedItem();
+        if (currentPoint != null) {
+            try {
+                // 加载知识点详情页面
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/pointDetail.fxml"));
+                
+                // 设置Spring上下文作为控制器工厂，这是关键！
+                loader.setControllerFactory(org.myself.iamreviewing.IamreviewingApplication.getSpringContext()::getBean);
+                
+                Parent root = loader.load();
+                
+                // 获取控制器
+                PointDetailController controller = loader.getController();
+                controller.setPointId(currentPoint.getId());
+                
+                // 创建新窗口
+                Stage stage = new Stage();
+                stage.setTitle("知识点详情 - " + currentPoint.getName());
+                // 增加窗口大小，确保内容有足够空间显示
+                stage.setScene(new Scene(root, 1200, 800));
+                stage.setMinWidth(1000);
+                stage.setMinHeight(700);
+                // 窗口居中显示
+                stage.centerOnScreen();
+                
+                // 设置控制器的stage
+                controller.setStage(stage);
+                
+                // 显示窗口
+                stage.show();
+            } catch (IOException e) {
+                e.printStackTrace();
+                showError("打开知识点详情失败: " + e.getMessage());
+            }
+        }
+    }
+    
+    // 处理知识点列表的鼠标点击事件，支持双击查看详情
+    @FXML
+    private void handlePointMousePressed(javafx.scene.input.MouseEvent event) {
+        if (event.getClickCount() == 2) {
+            // 双击事件
+            viewPointDetail();
         }
     }
 

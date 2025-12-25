@@ -88,6 +88,12 @@ public class PointServiceImpl extends ServiceImpl<PointMapper, Point> implements
         return convertToVO(Optional.ofNullable(getById(point.getId())).stream().collect(Collectors.toList())).get(0);
     }
 
+    @Override
+    public PointVO getPointById(Long id) {
+        List<Point> points = Optional.ofNullable(getById(id)).stream().collect(Collectors.toList());
+        List<PointVO> pointVOs = convertToVO(points);
+        return pointVOs.isEmpty() ? null : pointVOs.get(0);
+    }
 
     public  List<PointVO> convertToVO(List<Point> points) {
         if(points==null||points.isEmpty()){return List.of();}

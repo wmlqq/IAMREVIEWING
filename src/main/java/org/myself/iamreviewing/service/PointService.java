@@ -22,4 +22,6 @@ public interface PointService extends IService<Point> {
 
     PointVO createPoint(PointDTO pointDTO);
 
+    PointVO getPointById(Long id);
+
 }
