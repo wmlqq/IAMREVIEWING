@@ -8,7 +8,7 @@ import javafx.stage.FileChooser;
 import org.myself.iamreviewing.component.AttachmentPreview;
 import org.myself.iamreviewing.domain.dto.AttachmentDTO;
 import org.myself.iamreviewing.domain.dto.PointDTO;
-import org.myself.iamreviewing.domain.enums.DifiicultyLevel;
+import org.myself.iamreviewing.domain.enums.DifficultyLevel;
 import org.myself.iamreviewing.domain.enums.FileType;
 import org.myself.iamreviewing.domain.enums.Memoried;
 import org.myself.iamreviewing.domain.vo.AttachmentVO;
@@ -54,7 +54,7 @@ public class MainController {
     @FXML
     private TextField pointCategoryField;
     @FXML
-    private ComboBox<DifiicultyLevel> difficultyCombo;
+    private ComboBox<DifficultyLevel> difficultyCombo;
     @FXML
     private ComboBox<Memoried> memoriedCombo;
     @FXML
@@ -97,7 +97,7 @@ public class MainController {
     // 初始化控件
     private void initializeControls() {
         // 设置难度和掌握程度下拉框
-        difficultyCombo.getItems().addAll(DifiicultyLevel.values());
+        difficultyCombo.getItems().addAll(DifficultyLevel.values());
         memoriedCombo.getItems().addAll(Memoried.values());
 
         // 设置知识点列表的单元格工厂
@@ -108,7 +108,7 @@ public class MainController {
                 if (empty || item == null) {
                     setText(null);
                 } else {
-                    setText(item.getName() + " - " + item.getCategory() + " (" + item.getDifiicultyLevel().getDesc() + ")");
+                    setText(item.getName() + " - " + item.getCategory() + " (" + item.getDifficultyLevel().getDesc() + ")");
                 }
             }
         });
@@ -201,8 +201,8 @@ public class MainController {
         pointDTO.setName(pointNameField.getText());
         pointDTO.setDescription(pointDescArea.getText());
         pointDTO.setCategory(pointCategoryField.getText());
-        pointDTO.setDifiicultyLevel(difficultyCombo.getValue());
-        pointDTO.setMemoried(memoriedCombo.getValue());
+        pointDTO.setDifficultyLevel(difficultyCombo.getValue()== null ? DifficultyLevel.THREE : difficultyCombo.getValue());
+        pointDTO.setMemoried(memoriedCombo.getValue()== null ? Memoried.NO : memoriedCombo.getValue());
 
         PointVO savedPoint;
         // 调用service层方法保存或更新知识点
@@ -258,7 +258,7 @@ public class MainController {
             pointNameField.setText(currentPoint.getName());
             pointDescArea.setText(currentPoint.getDescription());
             pointCategoryField.setText(currentPoint.getCategory());
-            difficultyCombo.setValue(currentPoint.getDifiicultyLevel());
+            difficultyCombo.setValue(currentPoint.getDifficultyLevel());
             memoriedCombo.setValue(currentPoint.getMemoried());
             createDateLabel.setText(currentPoint.getCreateDate().toString());
 
@@ -395,7 +395,7 @@ public class MainController {
         pointNameField.clear();
         pointDescArea.clear();
         pointCategoryField.setText("未分类");
-        difficultyCombo.setValue(DifiicultyLevel.THREE);
+        difficultyCombo.setValue(DifficultyLevel.THREE);
         memoriedCombo.setValue(Memoried.NO);
         createDateLabel.setText("");
 

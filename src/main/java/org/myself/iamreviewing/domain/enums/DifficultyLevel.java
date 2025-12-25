@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.EnumValue;
 import lombok.Getter;
 
 @Getter
-public enum DifiicultyLevel {
+public enum DifficultyLevel {
     ONE(1,"简单"),
     TWO(2,"还行"),
     THREE(3,"中等"),
@@ -16,7 +16,7 @@ public enum DifiicultyLevel {
     private final Integer code;
     private final String desc;
 
-    DifiicultyLevel(Integer code, String desc) {
+    DifficultyLevel(Integer code, String desc) {
         this.code = code;
         this.desc = desc;
     }

@@ -4,7 +4,7 @@ import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import org.myself.iamreviewing.domain.enums.DifiicultyLevel;
+import org.myself.iamreviewing.domain.enums.DifficultyLevel;
 import org.myself.iamreviewing.domain.enums.Memoried;
 import lombok.Data;
 import lombok.NonNull;
@@ -25,7 +25,7 @@ public class Point {
     private String category="未分类";
     private final LocalDate createDate= LocalDate.now();
     @NonNull
-    private DifiicultyLevel difiicultyLevel= DifiicultyLevel.THREE;
+    private DifficultyLevel difficultyLevel= DifficultyLevel.THREE;
     @NonNull
     private Memoried memoried=Memoried.NO;
     @TableField(exist = false)
