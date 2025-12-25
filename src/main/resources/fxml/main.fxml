@@ -2,10 +2,10 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<BorderPane xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.myself.iamreviewing.controller.MainController">
+<BorderPane xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.myself.iamreviewing.controller.MainController" stylesheets="/css/styles.css">
     <!-- 顶部工具栏 -->
     <top>
-        <VBox spacing="10">
+        <VBox spacing="10" styleClass="toolbar">
             <HBox spacing="10" alignment="CENTER_LEFT">
                 <TextField fx:id="searchField" promptText="搜索知识点..." prefWidth="300" onAction="#searchPoints" />
                 <Button fx:id="searchBtn" text="搜索" onAction="#searchPoints" />
@@ -20,10 +20,10 @@
     <center>
         <SplitPane dividerPositions="0.3">
             <!-- 左侧知识点列表 -->
-            <VBox fx:id="leftPanel">
+            <VBox fx:id="leftPanel" styleClass="vbox">
                 <Label text="知识点列表" />
                 <ListView fx:id="pointListView" prefHeight="600" onMouseClicked="#onPointSelectionChanged" onMousePressed="#handlePointMousePressed" />
-                <HBox spacing="10">
+                <HBox spacing="10" styleClass="hbox">
                     <Button fx:id="viewDetailBtn" text="查看详情" onAction="#viewPointDetail" />
                     <Button fx:id="deletePointBtn" text="删除知识点" onAction="#deletePoint" disable="true" />
                     <Button fx:id="refreshBtn" text="刷新列表" onAction="#loadAllPoints" />
@@ -34,9 +34,9 @@
             <TabPane fx:id="rightPanel" tabClosingPolicy="UNAVAILABLE">
                 <!-- 知识点详情标签页 -->
                 <Tab text="知识点详情">
-                    <VBox spacing="10">
+                    <VBox spacing="10" styleClass="vbox">
                         <!-- 知识点基本信息 -->
-                        <GridPane hgap="10" vgap="10">
+                        <GridPane hgap="10" vgap="10" styleClass="grid-pane">
                             <columnConstraints>
                                 <ColumnConstraints prefWidth="100" />
                                 <ColumnConstraints prefWidth="300" />
@@ -64,7 +64,7 @@
                         </GridPane>
 
                         <!-- 操作按钮 -->
-                        <HBox spacing="10" alignment="CENTER_RIGHT">
+                        <HBox spacing="10" alignment="CENTER_RIGHT" styleClass="hbox">
                             <Button fx:id="savePointBtn" text="保存知识点" onAction="#savePoint" />
                             <Button fx:id="clearFormBtn" text="清空表单" onAction="#clearForm" />
                         </HBox>
@@ -73,9 +73,9 @@
 
                 <!-- 附件管理标签页 -->
                 <Tab text="附件管理">
-                    <VBox spacing="10">
+                    <VBox spacing="10" styleClass="vbox">
                         <!-- 附件列表 -->
-                        <HBox spacing="10" alignment="CENTER_LEFT">
+                        <HBox spacing="10" alignment="CENTER_LEFT" styleClass="hbox">
                             <Label text="附件列表" />
                             <Button fx:id="uploadAttachBtn" text="上传附件" onAction="#uploadAttachment" />
                             <Button fx:id="deleteAttachBtn" text="删除附件" onAction="#deleteAttachment" disable="true" />
@@ -84,7 +84,7 @@
 
                         <!-- 附件预览区 -->
                         <Label text="附件预览" />
-                        <BorderPane fx:id="previewContainer" prefHeight="300" style="-fx-border-color: #ccc; -fx-border-width: 1px; -fx-border-radius: 4px;">
+                        <BorderPane fx:id="previewContainer" prefHeight="300" styleClass="preview-container">
                             <center>
                                 <VBox fx:id="previewContent" alignment="CENTER" spacing="10">
                                     <Label text="请选择一个附件进行预览" />
@@ -93,7 +93,7 @@
                         </BorderPane>
 
                         <!-- 附件信息 -->
-                        <GridPane fx:id="attachmentInfo" hgap="10" vgap="5">
+                        <GridPane fx:id="attachmentInfo" hgap="10" vgap="5" styleClass="grid-pane">
                             <columnConstraints>
                                 <ColumnConstraints prefWidth="100" />
                                 <ColumnConstraints prefWidth="200" />

@@ -18,7 +18,6 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
-import lombok.Getter;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -41,7 +40,6 @@ import java.io.File;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Controller
 public class PointDetailController {
@@ -128,39 +126,19 @@ public class PointDetailController {
         LANGUAGE_SYNTAX_MAP.put(".py", new LanguageSyntax(pythonKeywords, "#", null, null));
         LANGUAGE_SYNTAX_MAP.put(".pyw", new LanguageSyntax(pythonKeywords, "#", null, null));
     }
-    
+
     /**
-     * 语言语法规则类
-     */
-    @Getter
-    private static class LanguageSyntax {
-        private final Set<String> keywords;
-        private final String singleLineComment;
-        private final String multiLineCommentStart;
-        private final String multiLineCommentEnd;
-        
-        public LanguageSyntax(Set<String> keywords, String singleLineComment, 
-                           String multiLineCommentStart, String multiLineCommentEnd) {
-            this.keywords = keywords;
-            this.singleLineComment = singleLineComment;
-            this.multiLineCommentStart = multiLineCommentStart;
-            this.multiLineCommentEnd = multiLineCommentEnd;
-        }
+         * 语言语法规则类
+         */
+        private record LanguageSyntax(Set<String> keywords, String singleLineComment, String multiLineCommentStart,
+                                      String multiLineCommentEnd) {
 
     }
-    
+
     /**
-     * 文本片段类
-     */
-    @Getter
-    private static class TextSegment {
-        private final String text;
-        private final Color color;
-        
-        public TextSegment(String text, Color color) {
-            this.text = text;
-            this.color = color;
-        }
+         * 文本片段类
+         */
+        private record TextSegment(String text, Color color) {
 
     }
 
@@ -171,6 +149,8 @@ public class PointDetailController {
     private Button prevBtn;
     @FXML
     private Button nextBtn;
+    @FXML
+    private VBox mainContainer;
     @FXML
     private Label pointTitle;
     @FXML
@@ -198,27 +178,77 @@ public class PointDetailController {
         // 设置切换按钮事件
         prevBtn.setOnAction(event -> showPrevPoint());
         nextBtn.setOnAction(event -> showNextPoint());
+        
+        // 保存初始的子元素顺序，以便后续恢复
+        initialChildren = new ArrayList<>(mainContainer.getChildren());
     }
+    
+    // 初始子元素列表，用于恢复正常内容
+    private List<javafx.scene.Node> initialChildren;
 
     /**
      * 设置知识点ID并加载数据
      */
     public void setPointId(Long pointId) {
         this.pointId = pointId;
-        // 加载所有知识点，用于切换
-        allPoints = pointService.getAllPoints();
-        // 找到当前知识点在列表中的索引
-        for (int i = 0; i < allPoints.size(); i++) {
-            if (allPoints.get(i).getId().equals(pointId)) {
-                currentPointIndex = i;
-                break;
+        
+        // 显示加载提示
+        showLoadingIndicator();
+        
+        // 异步加载数据，避免阻塞UI线程
+        new Thread(() -> {
+            try {
+                // 加载所有知识点，用于切换
+                allPoints = pointService.getAllPoints();
+                // 找到当前知识点在列表中的索引
+                for (int i = 0; i < allPoints.size(); i++) {
+                    if (allPoints.get(i).getId().equals(pointId)) {
+                        currentPointIndex = i;
+                        break;
+                    }
+                }
+                // 加载数据
+                loadPointData();
+                loadAllAttachments();
+                // 更新切换按钮状态
+                updateNavigationButtons();
+            } finally {
+                // 隐藏加载提示
+                javafx.application.Platform.runLater(this::hideLoadingIndicator);
             }
-        }
-        // 加载数据
-        loadPointData();
-        loadAllAttachments();
-        // 更新切换按钮状态
-        updateNavigationButtons();
+        }).start();
+    }
+    
+    /**
+     * 显示加载提示
+     */
+    private void showLoadingIndicator() {
+        // 清空主容器，添加加载提示
+        mainContainer.getChildren().clear();
+        
+        javafx.scene.control.ProgressIndicator progressIndicator = new javafx.scene.control.ProgressIndicator();
+        progressIndicator.setStyle("-fx-progress-color: #4a5568; -fx-font-size: 20px;");
+        progressIndicator.setPrefSize(100, 100);
+        
+        javafx.scene.control.Label loadingLabel = new javafx.scene.control.Label("正在加载详情...");
+        loadingLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #718096; -fx-padding: 20px 0;");
+        
+        javafx.scene.layout.VBox loadingContainer = new javafx.scene.layout.VBox(20, progressIndicator, loadingLabel);
+        loadingContainer.setAlignment(javafx.geometry.Pos.CENTER);
+        loadingContainer.setStyle("-fx-padding: 100px;");
+        
+        mainContainer.getChildren().add(loadingContainer);
+    }
+    
+    /**
+     * 隐藏加载提示，恢复正常内容
+     */
+    private void hideLoadingIndicator() {
+        // 清空加载提示
+        mainContainer.getChildren().clear();
+        
+        // 重新添加原始内容
+        mainContainer.getChildren().addAll(initialChildren);
     }
 
     /**
@@ -265,27 +295,27 @@ public class PointDetailController {
         // 添加文本附件
         sortedAttachments.addAll(attachments.stream()
                 .filter(attach -> attach.getFileType() == FileType.TEXT)
-                .collect(Collectors.toList()));
+                .toList());
         
         // 添加代码附件
         sortedAttachments.addAll(attachments.stream()
                 .filter(attach -> attach.getFileType() == FileType.CODE)
-                .collect(Collectors.toList()));
+                .toList());
         
         // 添加图片附件
         sortedAttachments.addAll(attachments.stream()
                 .filter(attach -> attach.getFileType() == FileType.IMAGE)
-                .collect(Collectors.toList()));
+                .toList());
         
         // 添加音频附件
         sortedAttachments.addAll(attachments.stream()
                 .filter(attach -> attach.getFileType() == FileType.AUDIO)
-                .collect(Collectors.toList()));
+                .toList());
         
         // 添加视频附件
         sortedAttachments.addAll(attachments.stream()
                 .filter(attach -> attach.getFileType() == FileType.VIDEO)
-                .collect(Collectors.toList()));
+                .toList());
         
         // 添加附件类型标题
         addSectionTitle("附件内容");
@@ -317,36 +347,35 @@ public class PointDetailController {
             String fileExtension = getFileExtension(filename).toLowerCase();
             
             // 根据扩展名处理文件
-            if (fileExtension.equals(".pdf")) {
-                // PDF文件
-                displayPdfFile(file, allAttachments);
-            } else if (fileExtension.equals(".docx")) {
-                // DOCX文件
-                displayDocxFile(file, allAttachments);
-            } else if (fileExtension.equals(".md") || fileExtension.equals(".txt") || fileExtension.equals(".text")) {
-                // 文本文件
-                displayTextFile(file, allAttachments);
-            } else if (fileExtension.equals(".java") || fileExtension.equals(".py") || fileExtension.equals(".c") || 
-                      fileExtension.equals(".cpp") || fileExtension.equals(".h") || fileExtension.equals(".hpp")) {
-                // 代码文件
-                displayCodeFile(file, allAttachments);
-            } else if (fileExtension.equals(".jpg") || fileExtension.equals(".jpeg") || fileExtension.equals(".png") || 
-                      fileExtension.equals(".gif") || fileExtension.equals(".bmp")) {
-                // 图片文件
-                displayImageFile(file, allAttachments);
-            } else if (fileExtension.equals(".mp3") || fileExtension.equals(".wav") || fileExtension.equals(".ogg")) {
-                // 音频文件
-                createAudioPlayer(file, allAttachments);
-            } else if (fileExtension.equals(".mp4") || fileExtension.equals(".avi") || fileExtension.equals(".mov") || 
-                      fileExtension.equals(".wmv")) {
-                // 视频文件
-                createVideoPlayer(file, allAttachments);
-            } else {
-                // 其他文件类型，显示基本信息
-                Label infoLabel = new Label("文件类型：" + fileExtension + "，大小：" + formatFileSize(file.length()));
-                infoLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #718096; -fx-padding: 10px 0;");
-                allAttachments.getChildren().add(infoLabel);
-            }
+                switch (fileExtension) {
+                    case ".pdf" ->
+                        // PDF文件
+                            displayPdfFile(file, allAttachments);
+                    case ".docx" ->
+                        // DOCX文件
+                            displayDocxFile(file, allAttachments);
+                    case ".md", ".txt", ".text" ->
+                        // 文本文件
+                            displayTextFile(file, allAttachments);
+                    case ".java", ".py", ".c", ".cpp", ".h", ".hpp" ->
+                        // 代码文件
+                            displayCodeFile(file, allAttachments);
+                    case ".jpg", ".jpeg", ".png", ".gif", ".bmp" ->
+                        // 图片文件
+                            displayImageFile(file, allAttachments);
+                    case ".mp3", ".wav", ".ogg" ->
+                        // 音频文件
+                            createAudioPlayer(file, allAttachments);
+                    case ".mp4", ".avi", ".mov", ".wmv" ->
+                        // 视频文件
+                            createVideoPlayer(file, allAttachments);
+                    default -> {
+                        // 其他文件类型，显示基本信息
+                        Label infoLabel = new Label("文件类型：" + fileExtension + "，大小：" + formatFileSize(file.length()));
+                        infoLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #718096; -fx-padding: 10px 0;");
+                        allAttachments.getChildren().add(infoLabel);
+                    }
+                }
                 
                 // 最后一个附件不需要添加空行
                 if (i < sortedAttachments.size() - 1) {
@@ -385,8 +414,7 @@ public class PointDetailController {
      */
     private void styleTextContent(ObservableList<Node> children) {
         for (Node node : children) {
-            if (node instanceof TextArea) {
-                TextArea textArea = (TextArea) node;
+            if (node instanceof TextArea textArea) {
                 textArea.setStyle(
                         "-fx-background-color: transparent; " +
                         "-fx-border: none; " +
@@ -405,8 +433,7 @@ public class PointDetailController {
      */
     private void styleCodeContent(ObservableList<Node> children) {
         for (Node node : children) {
-            if (node instanceof TextArea) {
-                TextArea textArea = (TextArea) node;
+            if (node instanceof TextArea textArea) {
                 textArea.setStyle(
                         "-fx-background-color: #2d3748; " +
                         "-fx-border-radius: 6px; " +
@@ -426,8 +453,7 @@ public class PointDetailController {
      */
     private void styleImageContent(ObservableList<Node> children) {
         for (Node node : children) {
-            if (node instanceof ImageView) {
-                ImageView imageView = (ImageView) node;
+            if (node instanceof ImageView imageView) {
                 imageView.setStyle(
                         "-fx-border-radius: 6px; " +
                         "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 8, 0, 0, 2);"
@@ -503,9 +529,7 @@ public class PointDetailController {
             });
 
             // 进度条拖动
-            progressSlider.setOnMousePressed(e -> {
-                mediaPlayer.pause();
-            });
+            progressSlider.setOnMousePressed(e -> mediaPlayer.pause());
 
             progressSlider.setOnMouseReleased(e -> {
                 mediaPlayer.seek(javafx.util.Duration.seconds(progressSlider.getValue()));
@@ -538,9 +562,7 @@ public class PointDetailController {
             parentContainer.getChildren().add(controls);
 
             // 清理资源
-            mediaPlayer.setOnEndOfMedia(() -> {
-                playBtn.setText("播放");
-            });
+            mediaPlayer.setOnEndOfMedia(() -> playBtn.setText("播放"));
 
         } catch (Exception e) {
             Label errorLabel = new Label("加载音频失败: " + e.getMessage());
@@ -622,9 +644,7 @@ public class PointDetailController {
             });
 
             // 进度条拖动
-            progressSlider.setOnMousePressed(e -> {
-                mediaPlayer.pause();
-            });
+            progressSlider.setOnMousePressed(e -> mediaPlayer.pause());
 
             progressSlider.setOnMouseReleased(e -> {
                 mediaPlayer.seek(javafx.util.Duration.seconds(progressSlider.getValue()));
@@ -663,9 +683,7 @@ public class PointDetailController {
             parentContainer.getChildren().add(videoContainer);
 
             // 清理资源
-            mediaPlayer.setOnEndOfMedia(() -> {
-                playBtn.setText("播放");
-            });
+            mediaPlayer.setOnEndOfMedia(() -> playBtn.setText("播放"));
 
         } catch (Exception e) {
             Label errorLabel = new Label("加载视频失败: " + e.getMessage());
@@ -775,23 +793,22 @@ public class PointDetailController {
             List<TextSegment> segments = new ArrayList<>();
             
             // 处理多行注释（这里简化处理，只处理单行内的注释）
-            if (syntax.getMultiLineCommentStart() != null && syntax.getMultiLineCommentEnd() != null) {
-                int commentStart = line.indexOf(syntax.getMultiLineCommentStart());
+            if (syntax.multiLineCommentStart() != null && syntax.multiLineCommentEnd() != null) {
+                int commentStart = line.indexOf(syntax.multiLineCommentStart());
                 if (commentStart != -1) {
-                    int commentEnd = line.indexOf(syntax.getMultiLineCommentEnd(), commentStart + syntax.getMultiLineCommentStart().length());
+                    int commentEnd = line.indexOf(syntax.multiLineCommentEnd(), commentStart + syntax.multiLineCommentStart().length());
+                    processLineSegments(line.substring(0, commentStart), syntax, segments);
                     if (commentEnd != -1) {
                         // 处理注释前的内容
-                        processLineSegments(line.substring(0, commentStart), syntax, segments);
                         // 添加注释
                         segments.add(new TextSegment(
-                                line.substring(commentStart, commentEnd + syntax.getMultiLineCommentEnd().length()),
+                                line.substring(commentStart, commentEnd + syntax.multiLineCommentEnd().length()),
                                 Color.GREEN
                         ));
                         // 处理注释后的内容
-                        processLineSegments(line.substring(commentEnd + syntax.getMultiLineCommentEnd().length()), syntax, segments);
+                        processLineSegments(line.substring(commentEnd + syntax.multiLineCommentEnd().length()), syntax, segments);
                     } else {
                         // 多行注释开始，没有结束
-                        processLineSegments(line.substring(0, commentStart), syntax, segments);
                         segments.add(new TextSegment(
                                 line.substring(commentStart),
                                 Color.GREEN
@@ -799,7 +816,7 @@ public class PointDetailController {
                     }
                 } else {
                     // 处理单行注释
-                    int singleCommentStart = line.indexOf(syntax.getSingleLineComment());
+                    int singleCommentStart = line.indexOf(syntax.singleLineComment());
                     if (singleCommentStart != -1) {
                         // 处理注释前的内容
                         processLineSegments(line.substring(0, singleCommentStart), syntax, segments);
@@ -815,7 +832,7 @@ public class PointDetailController {
                 }
             } else {
                 // 只有单行注释的语言（如Python）
-                int singleCommentStart = line.indexOf(syntax.getSingleLineComment());
+                int singleCommentStart = line.indexOf(syntax.singleLineComment());
                 if (singleCommentStart != -1) {
                     // 处理注释前的内容
                     processLineSegments(line.substring(0, singleCommentStart), syntax, segments);
@@ -832,8 +849,8 @@ public class PointDetailController {
             
             // 将分段添加到TextFlow
             for (TextSegment segment : segments) {
-                Text text = new Text(segment.getText());
-                text.setFill(segment.getColor());
+                Text text = new Text(segment.text());
+                text.setFill(segment.color());
                 textFlow.getChildren().add(text);
             }
             
@@ -859,7 +876,7 @@ public class PointDetailController {
                 segments.add(new TextSegment(match, Color.WHITE));
             }
             // 关键字
-            else if (matcher.group(1) != null && syntax.getKeywords().contains(matcher.group(1))) {
+            else if (matcher.group(1) != null && syntax.keywords().contains(matcher.group(1))) {
                 segments.add(new TextSegment(match, Color.BLUE));
             }
             // 字符串
@@ -947,9 +964,7 @@ public class PointDetailController {
                         pageContainer.setStyle("-fx-background-color: white; -fx-padding: 10px; -fx-border-radius: 4px; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 2);");
                         
                         // 在JavaFX应用线程中添加页面
-                        javafx.application.Platform.runLater(() -> {
-                            pagesVBox.getChildren().add(pageContainer);
-                        });
+                        javafx.application.Platform.runLater(() -> pagesVBox.getChildren().add(pageContainer));
                     } catch (Exception e) {
                         // 单页渲染失败，继续渲染其他页
                         System.err.println("渲染PDF第 " + (pageNum + 1) + " 页失败: " + e.getMessage());
@@ -962,9 +977,7 @@ public class PointDetailController {
                     morePagesLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #718096; -fx-margin-top: 5px;");
                     morePagesLabel.setAlignment(Pos.CENTER);
                     
-                    javafx.application.Platform.runLater(() -> {
-                        pagesVBox.getChildren().add(morePagesLabel);
-                    });
+                    javafx.application.Platform.runLater(() -> pagesVBox.getChildren().add(morePagesLabel));
                 }
                 
                 // 创建滚动面板
@@ -989,9 +1002,7 @@ public class PointDetailController {
                         "-fx-cursor: hand;"
                 );
                 enlargeBtn.setTooltip(new Tooltip("放大查看"));
-                enlargeBtn.setOnAction(e -> {
-                    showEnlargePdfView(file, pageCount);
-                });
+                enlargeBtn.setOnAction(e -> showEnlargePdfView(file, pageCount));
                 
                 // 添加页码信息
                 Label pageInfoLabel = new Label("共 " + pageCount + " 页");
@@ -1118,7 +1129,7 @@ public class PointDetailController {
             document.close();
             
             // 如果提取到内容，显示文本
-            if (content.length() > 0) {
+            if (!content.isEmpty()) {
                 System.out.println("成功提取DOCX内容，长度: " + content.length());
                 // 创建带放大功能的文本显示组件
                 createTextWithEnlargeButton(content.toString(), "DOCX", parentContainer, file.getName());
@@ -1163,9 +1174,7 @@ public class PointDetailController {
                 "-fx-cursor: hand;"
         );
         enlargeBtn.setTooltip(new Tooltip("放大查看"));
-        enlargeBtn.setOnAction(e -> {
-            showEnlargeText(content, fileType, fileName);
-        });
+        enlargeBtn.setOnAction(e -> showEnlargeText(content, fileType, fileName));
         
         controlBox.getChildren().add(enlargeBtn);
         
@@ -1329,20 +1338,14 @@ public class PointDetailController {
      * 根据文件类型获取图标
      */
     private String getAttachmentIcon(FileType fileType) {
-        switch (fileType) {
-            case TEXT:
-                return "📄";
-            case CODE:
-                return "💻";
-            case IMAGE:
-                return "🖼️";
-            case AUDIO:
-                return "🎵";
-            case VIDEO:
-                return "🎬";
-            default:
-                return "📎";
-        }
+        return switch (fileType) {
+            case TEXT -> "📄";
+            case CODE -> "💻";
+            case IMAGE -> "🖼️";
+            case AUDIO -> "🎵";
+            case VIDEO -> "🎬";
+            default -> "📎";
+        };
     }
 
     /**

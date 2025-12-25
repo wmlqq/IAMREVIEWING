@@ -5,7 +5,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
@@ -107,7 +106,7 @@ public class MainController {
         memoriedCombo.getItems().addAll(Memoried.values());
 
         // 设置知识点列表的单元格工厂
-        pointListView.setCellFactory(param -> new ListCell<PointVO>() {
+        pointListView.setCellFactory(param -> new ListCell<>() {
             @Override
             protected void updateItem(PointVO item, boolean empty) {
                 super.updateItem(item, empty);
@@ -120,7 +119,7 @@ public class MainController {
         });
 
         // 设置附件列表的单元格工厂
-        attachmentListView.setCellFactory(param -> new ListCell<AttachmentVO>() {
+        attachmentListView.setCellFactory(param -> new ListCell<>() {
             @Override
             protected void updateItem(AttachmentVO item, boolean empty) {
                 super.updateItem(item, empty);
