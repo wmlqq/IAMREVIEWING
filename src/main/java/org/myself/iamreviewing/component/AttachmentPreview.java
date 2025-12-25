@@ -18,6 +18,12 @@ import javafx.scene.media.MediaView;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.rendering.PDFRenderer;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -28,6 +34,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import javafx.embed.swing.SwingFXUtils;
 
 public class AttachmentPreview extends VBox {
 
@@ -91,27 +98,85 @@ public class AttachmentPreview extends VBox {
      * @param file 文件对象
      */
     private void showPdfPreview(File file) {
-        Label title = new Label("PDF预览");
+        Label title = new Label("PDF预览 - " + file.getName());
         title.setStyle("-fx-font-weight: bold;");
         
-        // 由于PDF预览需要复杂的库支持，这里先显示基本信息和打开提示
-        Label infoLabel = new Label("PDF文件预览需要外部支持，点击下方按钮打开文件");
-        infoLabel.setWrapText(true);
+        VBox pdfContent = new VBox(10);
+        pdfContent.setAlignment(Pos.CENTER);
         
-        Button openBtn = new Button("打开PDF文件");
-        openBtn.setOnAction(e -> {
-            try {
-                // 使用系统默认程序打开PDF文件
-                java.awt.Desktop.getDesktop().open(file);
-            } catch (IOException ex) {
-                showError("打开PDF文件失败: " + ex.getMessage());
+        // 异步加载PDF内容，避免阻塞UI线程
+        executor.submit(() -> {
+            try (PDDocument document = PDDocument.load(file)) {
+                PDFRenderer pdfRenderer = new PDFRenderer(document);
+                int pageCount = document.getNumberOfPages();
+                
+                // 创建VBox来存放所有PDF页面
+                VBox pagesVBox = new VBox(10);
+                pagesVBox.setAlignment(Pos.CENTER);
+                
+                // 渲染每一页
+                for (int pageNum = 0; pageNum < pageCount; pageNum++) {
+                    // 渲染PDF页面到BufferedImage
+                    BufferedImage bufferedImage = pdfRenderer.renderImage(pageNum, 1.5f); // 1.5倍缩放
+                    // 转换为JavaFX Image
+                    Image image = SwingFXUtils.toFXImage(bufferedImage, null);
+                    
+                    ImageView imageView = new ImageView(image);
+                    imageView.setPreserveRatio(true);
+                    imageView.setFitWidth(500); // 设置适合预览的宽度
+                    
+                    // 为每一页添加页面标题
+                    Label pageLabel = new Label("第 " + (pageNum + 1) + " 页");
+                    pageLabel.setStyle("-fx-font-weight: bold;");
+                    pageLabel.setAlignment(Pos.CENTER);
+                    
+                    VBox pageContainer = new VBox(5, pageLabel, imageView);
+                    pageContainer.setAlignment(Pos.CENTER);
+                    pageContainer.setStyle("-fx-padding: 10px; -fx-background-color: white; -fx-border-color: #e0e0e0; -fx-border-radius: 5px;");
+                    
+                    pagesVBox.getChildren().add(pageContainer);
+                }
+                
+                // 创建滚动面板来显示所有页面
+                ScrollPane scrollPane = new ScrollPane(pagesVBox);
+                scrollPane.setFitToWidth(true);
+                scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+                scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+                VBox.setVgrow(scrollPane, Priority.ALWAYS);
+                
+                // 添加放大查看按钮
+                Button enlargeBtn = new Button("放大查看");
+                enlargeBtn.setOnAction(e -> {
+                    Stage stage = new Stage();
+                    stage.setTitle("PDF放大查看 - " + file.getName());
+                    
+                    ScrollPane largeScrollPane = new ScrollPane(pagesVBox);
+                    largeScrollPane.setFitToWidth(true);
+                    largeScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+                    largeScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+                    
+                    VBox largeVBox = new VBox(10, largeScrollPane);
+                    largeVBox.setStyle("-fx-padding: 10px;");
+                    VBox.setVgrow(largeScrollPane, Priority.ALWAYS);
+                    
+                    stage.setScene(new javafx.scene.Scene(largeVBox, 900, 700));
+                    stage.show();
+                });
+                
+                // 在UI线程中更新界面
+                javafx.application.Platform.runLater(() -> {
+                    pdfContent.getChildren().clear();
+                    pdfContent.getChildren().addAll(enlargeBtn, scrollPane);
+                });
+                
+            } catch (IOException e) {
+                javafx.application.Platform.runLater(() -> {
+                    showError("加载PDF文件失败: " + e.getMessage());
+                });
             }
         });
         
-        VBox controls = new VBox(10, infoLabel, openBtn);
-        controls.setAlignment(Pos.CENTER);
-        
-        this.getChildren().addAll(title, controls);
+        this.getChildren().addAll(title, pdfContent);
     }
     
     /**
@@ -119,27 +184,75 @@ public class AttachmentPreview extends VBox {
      * @param file 文件对象
      */
     private void showDocxPreview(File file) {
-        Label title = new Label("DOCX预览");
+        Label title = new Label("DOCX预览 - " + file.getName());
         title.setStyle("-fx-font-weight: bold;");
         
-        // 由于DOCX预览需要复杂的库支持，这里先显示基本信息和打开提示
-        Label infoLabel = new Label("DOCX文件预览需要外部支持，点击下方按钮打开文件");
-        infoLabel.setWrapText(true);
+        VBox docxContent = new VBox(10);
+        docxContent.setAlignment(Pos.CENTER);
         
-        Button openBtn = new Button("打开DOCX文件");
-        openBtn.setOnAction(e -> {
-            try {
-                // 使用系统默认程序打开DOCX文件
-                java.awt.Desktop.getDesktop().open(file);
-            } catch (IOException ex) {
-                showError("打开DOCX文件失败: " + ex.getMessage());
+        // 异步加载DOCX内容，避免阻塞UI线程
+        executor.submit(() -> {
+            try (XWPFDocument document = new XWPFDocument(java.nio.file.Files.newInputStream(file.toPath()))) {
+                // 提取DOCX文本内容
+                StringBuilder content = new StringBuilder();
+                for (XWPFParagraph paragraph : document.getParagraphs()) {
+                    String text = paragraph.getText();
+                    if (!text.isEmpty()) {
+                        content.append(text).append("\n\n");
+                    }
+                }
+                
+                // 创建文本区域显示内容
+                TextArea textArea = new TextArea(content.toString());
+                textArea.setWrapText(true);
+                textArea.setEditable(false);
+                textArea.setStyle("-fx-font-family: 'Microsoft YaHei', 'SimSun', serif; -fx-font-size: 12px; -fx-background-color: #f9f9f9;");
+                
+                // 创建滚动面板
+                ScrollPane scrollPane = new ScrollPane(textArea);
+                scrollPane.setFitToWidth(true);
+                scrollPane.setFitToHeight(true);
+                scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+                scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+                VBox.setVgrow(scrollPane, Priority.ALWAYS);
+                
+                // 添加放大查看按钮
+                Button enlargeBtn = new Button("放大查看");
+                enlargeBtn.setOnAction(e -> {
+                    Stage stage = new Stage();
+                    stage.setTitle("DOCX放大查看 - " + file.getName());
+                    
+                    TextArea largeTextArea = new TextArea(content.toString());
+                    largeTextArea.setWrapText(true);
+                    largeTextArea.setEditable(false);
+                    largeTextArea.setStyle("-fx-font-family: 'Microsoft YaHei', 'SimSun', serif; -fx-font-size: 14px; -fx-background-color: #f9f9f9;");
+                    
+                    ScrollPane largeScrollPane = new ScrollPane(largeTextArea);
+                    largeScrollPane.setFitToWidth(true);
+                    largeScrollPane.setFitToHeight(true);
+                    
+                    VBox largeVBox = new VBox(10, largeScrollPane);
+                    largeVBox.setStyle("-fx-padding: 20px;");
+                    VBox.setVgrow(largeScrollPane, Priority.ALWAYS);
+                    
+                    stage.setScene(new javafx.scene.Scene(largeVBox, 900, 700));
+                    stage.show();
+                });
+                
+                // 在UI线程中更新界面
+                javafx.application.Platform.runLater(() -> {
+                    docxContent.getChildren().clear();
+                    docxContent.getChildren().addAll(enlargeBtn, scrollPane);
+                });
+                
+            } catch (IOException e) {
+                javafx.application.Platform.runLater(() -> {
+                    showError("加载DOCX文件失败: " + e.getMessage());
+                });
             }
         });
         
-        VBox controls = new VBox(10, infoLabel, openBtn);
-        controls.setAlignment(Pos.CENTER);
-        
-        this.getChildren().addAll(title, controls);
+        this.getChildren().addAll(title, docxContent);
     }
 
     /**
@@ -151,7 +264,7 @@ public class AttachmentPreview extends VBox {
                              file.getName().endsWith(".cpp") || file.getName().endsWith(".py") || 
                              file.getName().endsWith(".js") || file.getName().endsWith(".html") || 
                              file.getName().endsWith(".css") ? "代码" : "文本";
-        Label title = new Label(previewType + "预览");
+        Label title = new Label(previewType + "预览 - " + file.getName());
         title.setStyle("-fx-font-weight: bold;");
         
         // 编码选择
@@ -166,11 +279,20 @@ public class AttachmentPreview extends VBox {
         // 放大按钮
         Button enlargeBtn = new Button("放大查看");
         
+        // 创建代码编辑器
         TextArea textArea = new TextArea();
         textArea.setWrapText(false); // 代码文件不自动换行
         textArea.setEditable(false);
-        // 优化代码预览样式
-        textArea.setStyle("-fx-font-family: 'Consolas', 'Monaco', monospace; -fx-font-size: 12px; -fx-background-color: #f5f5f5; -fx-text-fill: #333;");
+        
+        // 根据文件类型设置不同的样式
+        if ("代码".equals(previewType)) {
+            // 代码文件使用等宽字体和语法高亮样式
+            textArea.setStyle("-fx-font-family: 'Consolas', 'Monaco', monospace; -fx-font-size: 12px; -fx-background-color: #1e1e1e; -fx-text-fill: #d4d4d4; -fx-highlight-fill: #424242; -fx-highlight-text-fill: #ffffff;");
+        } else {
+            // 普通文本使用默认样式
+            textArea.setStyle("-fx-font-family: 'Microsoft YaHei', 'SimSun', serif; -fx-font-size: 12px; -fx-background-color: #f9f9f9; -fx-text-fill: #333;");
+        }
+        
         textArea.setPrefRowCount(20);
         VBox.setVgrow(textArea, Priority.ALWAYS);
         
@@ -187,7 +309,11 @@ public class AttachmentPreview extends VBox {
                 String charset = charsetCombo.getValue();
                 byte[] bytes = Files.readAllBytes(Paths.get(file.getAbsolutePath()));
                 String content = new String(bytes, Charset.forName(charset));
-                textArea.setText(content);
+                
+                // 在UI线程中更新文本
+                javafx.application.Platform.runLater(() -> {
+                    textArea.setText(content);
+                });
             } catch (IOException e) {
                 showError("读取文件内容失败: " + e.getMessage());
             }
@@ -204,11 +330,19 @@ public class AttachmentPreview extends VBox {
             Stage stage = new Stage();
             stage.setTitle("放大查看 - " + file.getName());
             
-            TextArea largeTextArea = new TextArea(textArea.getText());
+            TextArea largeTextArea = new TextArea();
             largeTextArea.setWrapText(false);
             largeTextArea.setEditable(false);
-            // 优化放大后的代码样式
-            largeTextArea.setStyle("-fx-font-family: 'Consolas', 'Monaco', monospace; -fx-font-size: 14px; -fx-background-color: #f5f5f5; -fx-text-fill: #333;");
+            
+            // 放大视图的样式
+            if ("代码".equals(previewType)) {
+                largeTextArea.setStyle("-fx-font-family: 'Consolas', 'Monaco', monospace; -fx-font-size: 14px; -fx-background-color: #1e1e1e; -fx-text-fill: #d4d4d4; -fx-highlight-fill: #424242; -fx-highlight-text-fill: #ffffff;");
+            } else {
+                largeTextArea.setStyle("-fx-font-family: 'Microsoft YaHei', 'SimSun', serif; -fx-font-size: 14px; -fx-background-color: #f9f9f9; -fx-text-fill: #333;");
+            }
+            
+            // 加载内容到放大视图
+            largeTextArea.setText(textArea.getText());
             
             ScrollPane largeScrollPane = new ScrollPane(largeTextArea);
             largeScrollPane.setFitToWidth(true);
@@ -236,9 +370,10 @@ public class AttachmentPreview extends VBox {
             
             HBox largeToolbar = new HBox(10, largeCharsetLabel, largeCharsetCombo);
             largeToolbar.setAlignment(Pos.CENTER_LEFT);
+            largeToolbar.setStyle("-fx-padding: 10px;");
             
             VBox largeVBox = new VBox(10, largeToolbar, largeScrollPane);
-            largeVBox.setStyle("-fx-padding: 10px;");
+            largeVBox.setStyle("-fx-padding: 0 10px 10px 10px;");
             VBox.setVgrow(largeScrollPane, Priority.ALWAYS);
             
             stage.setScene(new javafx.scene.Scene(largeVBox, 1000, 800));
@@ -258,17 +393,35 @@ public class AttachmentPreview extends VBox {
      * @param file 文件对象
      */
     private void showImagePreview(File file) {
-        Label title = new Label("图片预览");
+        Label title = new Label("图片预览 - " + file.getName());
         title.setStyle("-fx-font-weight: bold;");
         
         ImageView imageView = new ImageView();
         imageView.setPreserveRatio(true);
-        imageView.setFitWidth(400);
-        imageView.setFitHeight(250);
         
         try {
             Image image = new Image(file.toURI().toString());
             imageView.setImage(image);
+            
+            // 根据图片实际尺寸动态调整显示大小
+            double imageWidth = image.getWidth();
+            double imageHeight = image.getHeight();
+            
+            // 计算合适的显示尺寸，最大宽度500，最大高度300
+            double displayWidth, displayHeight;
+            if (imageWidth > imageHeight) {
+                // 宽图
+                displayWidth = Math.min(imageWidth, 500);
+                displayHeight = (displayWidth / imageWidth) * imageHeight;
+            } else {
+                // 高图或方图
+                displayHeight = Math.min(imageHeight, 300);
+                displayWidth = (displayHeight / imageHeight) * imageWidth;
+            }
+            
+            imageView.setFitWidth(displayWidth);
+            imageView.setFitHeight(displayHeight);
+            
         } catch (Exception e) {
             showError("加载图片失败: " + e.getMessage());
             return;
@@ -277,6 +430,7 @@ public class AttachmentPreview extends VBox {
         ScrollPane scrollPane = new ScrollPane(imageView);
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
+        scrollPane.setStyle("-fx-background-color: #f0f0f0;");
         VBox.setVgrow(scrollPane, Priority.ALWAYS);
         
         // 控制按钮
@@ -293,14 +447,26 @@ public class AttachmentPreview extends VBox {
             Stage stage = new Stage();
             stage.setTitle("放大查看 - " + file.getName());
             
-            ImageView largeImageView = new ImageView(imageView.getImage());
+            Image image = imageView.getImage();
+            ImageView largeImageView = new ImageView(image);
             largeImageView.setPreserveRatio(true);
-            largeImageView.setFitWidth(800);
-            largeImageView.setFitHeight(600);
+            
+            // 根据图片实际尺寸设置初始窗口大小
+            double imageWidth = image.getWidth();
+            double imageHeight = image.getHeight();
+            
+            // 计算合适的窗口大小，最大宽度1000，最大高度800
+            double windowWidth = Math.min(imageWidth + 40, 1000);
+            double windowHeight = Math.min(imageHeight + 80, 800);
+            
+            // 设置图片显示大小，保持原始比例
+            largeImageView.setFitWidth(imageWidth > 1000 ? 1000 : imageWidth);
+            largeImageView.setFitHeight(imageHeight > 800 ? 800 : imageHeight);
             
             ScrollPane largeScrollPane = new ScrollPane(largeImageView);
             largeScrollPane.setFitToWidth(true);
             largeScrollPane.setFitToHeight(true);
+            largeScrollPane.setStyle("-fx-background-color: #f0f0f0;");
             
             // 放大视图的旋转按钮
             Button largeRotateBtn = new Button("旋转");
@@ -308,11 +474,45 @@ public class AttachmentPreview extends VBox {
                 largeImageView.setRotate(largeImageView.getRotate() + 90);
             });
             
-            VBox largeVBox = new VBox(10, largeRotateBtn, largeScrollPane);
+            // 添加缩放控制
+            ComboBox<String> zoomCombo = new ComboBox<>();
+            zoomCombo.getItems().addAll("50%", "75%", "100%", "125%", "150%", "200%", "适应窗口");
+            zoomCombo.setValue("100%");
+            
+            zoomCombo.setOnAction(ev -> {
+                String zoomValue = zoomCombo.getValue();
+                if ("适应窗口".equals(zoomValue)) {
+                    largeImageView.setFitWidth(windowWidth - 40);
+                    largeImageView.setFitHeight(windowHeight - 80);
+                } else {
+                    double zoom = Double.parseDouble(zoomValue.replace("%", "")) / 100;
+                    largeImageView.setFitWidth(image.getWidth() * zoom);
+                    largeImageView.setFitHeight(image.getHeight() * zoom);
+                }
+            });
+            
+            // 窗口大小变化时，更新"适应窗口"选项的显示
+            stage.widthProperty().addListener((obs, oldWidth, newWidth) -> {
+                if ("适应窗口".equals(zoomCombo.getValue())) {
+                    largeImageView.setFitWidth(newWidth.doubleValue() - 40);
+                }
+            });
+            
+            stage.heightProperty().addListener((obs, oldHeight, newHeight) -> {
+                if ("适应窗口".equals(zoomCombo.getValue())) {
+                    largeImageView.setFitHeight(newHeight.doubleValue() - 80);
+                }
+            });
+            
+            HBox largeControls = new HBox(10, largeRotateBtn, zoomCombo);
+            largeControls.setAlignment(Pos.CENTER_LEFT);
+            largeControls.setStyle("-fx-padding: 10px;");
+            
+            VBox largeVBox = new VBox(10, largeControls, largeScrollPane);
             largeVBox.setStyle("-fx-padding: 10px;");
             VBox.setVgrow(largeScrollPane, Priority.ALWAYS);
             
-            stage.setScene(new javafx.scene.Scene(largeVBox, 900, 700));
+            stage.setScene(new javafx.scene.Scene(largeVBox, windowWidth, windowHeight));
             stage.show();
         });
         
@@ -329,7 +529,7 @@ public class AttachmentPreview extends VBox {
      * @param file 文件对象
      */
     private void showAudioPreview(File file) {
-        Label title = new Label("音频预览");
+        Label title = new Label("音频预览 - " + file.getName());
         title.setStyle("-fx-font-weight: bold;");
         
         try {
@@ -356,24 +556,76 @@ public class AttachmentPreview extends VBox {
             
             // 进度条
             Slider progressSlider = new Slider(0, 1, 0);
-            progressSlider.setShowTickLabels(true);
-            progressSlider.setShowTickMarks(true);
-            progressSlider.setMinorTickCount(5);
+            progressSlider.setShowTickLabels(false);
+            progressSlider.setShowTickMarks(false);
+            progressSlider.setStyle("-fx-pref-height: 10px;");
+            
+            // 时间显示标签
+            Label timeLabel = new Label("00:00 / 00:00");
+            timeLabel.setStyle("-fx-font-family: 'Consolas', 'Monaco', monospace; -fx-font-size: 12px;");
+            
+            // 当媒体时长可用时更新进度条最大值和时间标签
+            media.durationProperty().addListener((obs, oldDuration, newDuration) -> {
+                progressSlider.setMax(newDuration.toSeconds());
+                // 内联格式化时间
+                int seconds = (int) Math.floor(newDuration.toSeconds());
+                int minutes = seconds / 60;
+                seconds %= 60;
+                String formattedDuration = String.format("%02d:%02d", minutes, seconds);
+                timeLabel.setText("00:00 / " + formattedDuration);
+            });
             
             // 进度条更新
             mediaPlayer.currentTimeProperty().addListener((obs, oldTime, newTime) -> {
                 if (!progressSlider.isValueChanging()) {
-                    progressSlider.setValue(newTime.toSeconds() / media.getDuration().toSeconds());
+                    progressSlider.setValue(newTime.toSeconds());
+                    // 内联格式化时间
+                    int currentSeconds = (int) Math.floor(newTime.toSeconds());
+                    int currentMinutes = currentSeconds / 60;
+                    currentSeconds %= 60;
+                    String formattedCurrent = String.format("%02d:%02d", currentMinutes, currentSeconds);
+                    
+                    int totalSeconds = (int) Math.floor(media.getDuration().toSeconds());
+                    int totalMinutes = totalSeconds / 60;
+                    totalSeconds %= 60;
+                    String formattedTotal = String.format("%02d:%02d", totalMinutes, totalSeconds);
+                    
+                    timeLabel.setText(formattedCurrent + " / " + formattedTotal);
                 }
             });
             
             // 进度条拖动
-            progressSlider.setOnMouseReleased(e -> {
-                mediaPlayer.seek(media.getDuration().multiply(progressSlider.getValue()));
+            progressSlider.setOnMousePressed(e -> {
+                mediaPlayer.pause();
             });
             
-            HBox controls = new HBox(10, playBtn, stopBtn, progressSlider);
+            progressSlider.setOnMouseReleased(e -> {
+                mediaPlayer.seek(javafx.util.Duration.seconds(progressSlider.getValue()));
+                mediaPlayer.play();
+                playBtn.setText("暂停");
+            });
+            
+            // 进度条拖动过程中更新时间显示
+            progressSlider.valueProperty().addListener((obs, oldValue, newValue) -> {
+                if (progressSlider.isValueChanging()) {
+                    // 内联格式化时间
+                    int currentSeconds = (int) Math.floor(newValue.doubleValue());
+                    int currentMinutes = currentSeconds / 60;
+                    currentSeconds %= 60;
+                    String formattedCurrent = String.format("%02d:%02d", currentMinutes, currentSeconds);
+                    
+                    int totalSeconds = (int) Math.floor(media.getDuration().toSeconds());
+                    int totalMinutes = totalSeconds / 60;
+                    totalSeconds %= 60;
+                    String formattedTotal = String.format("%02d:%02d", totalMinutes, totalSeconds);
+                    
+                    timeLabel.setText(formattedCurrent + " / " + formattedTotal);
+                }
+            });
+            
+            HBox controls = new HBox(10, playBtn, stopBtn, progressSlider, timeLabel);
             controls.setAlignment(Pos.CENTER);
+            controls.setStyle("-fx-padding: 10px;");
             HBox.setHgrow(progressSlider, Priority.ALWAYS);
             
             this.getChildren().addAll(title, controls);
@@ -393,7 +645,7 @@ public class AttachmentPreview extends VBox {
      * @param file 文件对象
      */
     private void showVideoPreview(File file) {
-        Label title = new Label("视频预览");
+        Label title = new Label("视频预览 - " + file.getName());
         title.setStyle("-fx-font-weight: bold;");
         
         try {
@@ -402,8 +654,8 @@ public class AttachmentPreview extends VBox {
             MediaView mediaView = new MediaView(mediaPlayer);
             
             mediaView.setPreserveRatio(true);
-            mediaView.setFitWidth(400);
-            mediaView.setFitHeight(250);
+            mediaView.setFitWidth(500);
+            mediaView.setFitHeight(300);
             
             // 视频控制按钮
             Button playBtn = new Button("播放");
@@ -433,20 +685,71 @@ public class AttachmentPreview extends VBox {
             
             // 进度条
             Slider progressSlider = new Slider(0, 1, 0);
-            progressSlider.setShowTickLabels(true);
-            progressSlider.setShowTickMarks(true);
-            progressSlider.setMinorTickCount(5);
+            progressSlider.setShowTickLabels(false);
+            progressSlider.setShowTickMarks(false);
+            progressSlider.setStyle("-fx-pref-height: 10px;");
+            
+            // 时间显示标签
+            Label timeLabel = new Label("00:00 / 00:00");
+            timeLabel.setStyle("-fx-font-family: 'Consolas', 'Monaco', monospace; -fx-font-size: 12px;");
+            
+            // 当媒体时长可用时更新进度条最大值和时间标签
+            media.durationProperty().addListener((obs, oldDuration, newDuration) -> {
+                progressSlider.setMax(newDuration.toSeconds());
+                // 内联格式化时间
+                int seconds = (int) Math.floor(newDuration.toSeconds());
+                int minutes = seconds / 60;
+                seconds %= 60;
+                String formattedDuration = String.format("%02d:%02d", minutes, seconds);
+                timeLabel.setText("00:00 / " + formattedDuration);
+            });
             
             // 进度条更新
             mediaPlayer.currentTimeProperty().addListener((obs, oldTime, newTime) -> {
                 if (!progressSlider.isValueChanging()) {
-                    progressSlider.setValue(newTime.toSeconds() / media.getDuration().toSeconds());
+                    progressSlider.setValue(newTime.toSeconds());
+                    // 内联格式化时间
+                    int currentSeconds = (int) Math.floor(newTime.toSeconds());
+                    int currentMinutes = currentSeconds / 60;
+                    currentSeconds %= 60;
+                    String formattedCurrent = String.format("%02d:%02d", currentMinutes, currentSeconds);
+                    
+                    int totalSeconds = (int) Math.floor(media.getDuration().toSeconds());
+                    int totalMinutes = totalSeconds / 60;
+                    totalSeconds %= 60;
+                    String formattedTotal = String.format("%02d:%02d", totalMinutes, totalSeconds);
+                    
+                    timeLabel.setText(formattedCurrent + " / " + formattedTotal);
                 }
             });
             
             // 进度条拖动
+            progressSlider.setOnMousePressed(e -> {
+                mediaPlayer.pause();
+            });
+            
             progressSlider.setOnMouseReleased(e -> {
-                mediaPlayer.seek(media.getDuration().multiply(progressSlider.getValue()));
+                mediaPlayer.seek(javafx.util.Duration.seconds(progressSlider.getValue()));
+                mediaPlayer.play();
+                playBtn.setText("暂停");
+            });
+            
+            // 进度条拖动过程中更新时间显示
+            progressSlider.valueProperty().addListener((obs, oldValue, newValue) -> {
+                if (progressSlider.isValueChanging()) {
+                    // 内联格式化时间
+                    int currentSeconds = (int) Math.floor(newValue.doubleValue());
+                    int currentMinutes = currentSeconds / 60;
+                    currentSeconds %= 60;
+                    String formattedCurrent = String.format("%02d:%02d", currentMinutes, currentSeconds);
+                    
+                    int totalSeconds = (int) Math.floor(media.getDuration().toSeconds());
+                    int totalMinutes = totalSeconds / 60;
+                    totalSeconds %= 60;
+                    String formattedTotal = String.format("%02d:%02d", totalMinutes, totalSeconds);
+                    
+                    timeLabel.setText(formattedCurrent + " / " + formattedTotal);
+                }
             });
             
             // 放大查看
@@ -457,8 +760,12 @@ public class AttachmentPreview extends VBox {
                 MediaPlayer largeMediaPlayer = new MediaPlayer(media);
                 MediaView largeMediaView = new MediaView(largeMediaPlayer);
                 largeMediaView.setPreserveRatio(true);
-                largeMediaView.setFitWidth(800);
-                largeMediaView.setFitHeight(600);
+                
+                // 动态调整视频尺寸以适应窗口
+                stage.widthProperty().addListener((obs, oldWidth, newWidth) -> {
+                    largeMediaView.setFitWidth(newWidth.doubleValue() - 40);
+                    largeMediaView.setFitHeight((newWidth.doubleValue() - 40) * 9 / 16); // 16:9 比例
+                });
                 
                 // 放大视图的控制按钮
                 Button largePlayBtn = new Button("播放");
@@ -485,40 +792,93 @@ public class AttachmentPreview extends VBox {
                 
                 // 放大视图的进度条
                 Slider largeProgressSlider = new Slider(0, 1, 0);
-                largeProgressSlider.setShowTickLabels(true);
-                largeProgressSlider.setShowTickMarks(true);
-                largeProgressSlider.setMinorTickCount(5);
+                largeProgressSlider.setShowTickLabels(false);
+                largeProgressSlider.setShowTickMarks(false);
+                largeProgressSlider.setStyle("-fx-pref-height: 10px;");
+                
+                // 放大视图的时间显示
+                Label largeTimeLabel = new Label("00:00 / 00:00");
+                largeTimeLabel.setStyle("-fx-font-family: 'Consolas', 'Monaco', monospace; -fx-font-size: 12px;");
+                
+                // 放大视图的进度条更新
+                media.durationProperty().addListener((obs, oldDuration, newDuration) -> {
+                    largeProgressSlider.setMax(newDuration.toSeconds());
+                    // 内联格式化时间
+                    int seconds = (int) Math.floor(newDuration.toSeconds());
+                    int minutes = seconds / 60;
+                    seconds %= 60;
+                    String formattedDuration = String.format("%02d:%02d", minutes, seconds);
+                    largeTimeLabel.setText("00:00 / " + formattedDuration);
+                });
                 
                 largeMediaPlayer.currentTimeProperty().addListener((obs, oldTime, newTime) -> {
                     if (!largeProgressSlider.isValueChanging()) {
-                        largeProgressSlider.setValue(newTime.toSeconds() / media.getDuration().toSeconds());
+                        largeProgressSlider.setValue(newTime.toSeconds());
+                        // 内联格式化时间
+                        int currentSeconds = (int) Math.floor(newTime.toSeconds());
+                        int currentMinutes = currentSeconds / 60;
+                        currentSeconds %= 60;
+                        String formattedCurrent = String.format("%02d:%02d", currentMinutes, currentSeconds);
+                        
+                        int totalSeconds = (int) Math.floor(media.getDuration().toSeconds());
+                        int totalMinutes = totalSeconds / 60;
+                        totalSeconds %= 60;
+                        String formattedTotal = String.format("%02d:%02d", totalMinutes, totalSeconds);
+                        
+                        largeTimeLabel.setText(formattedCurrent + " / " + formattedTotal);
                     }
                 });
                 
-                largeProgressSlider.setOnMouseReleased(ev -> {
-                    largeMediaPlayer.seek(media.getDuration().multiply(largeProgressSlider.getValue()));
+                largeProgressSlider.setOnMousePressed(ev -> {
+                    largeMediaPlayer.pause();
                 });
                 
-                HBox largeControls = new HBox(10, largePlayBtn, largeStopBtn, largeRotateBtn, largeProgressSlider);
+                largeProgressSlider.setOnMouseReleased(ev -> {
+                    largeMediaPlayer.seek(javafx.util.Duration.seconds(largeProgressSlider.getValue()));
+                    largeMediaPlayer.play();
+                    largePlayBtn.setText("暂停");
+                });
+                
+                largeProgressSlider.valueProperty().addListener((obs, oldValue, newValue) -> {
+                    if (largeProgressSlider.isValueChanging()) {
+                        // 内联格式化时间
+                        int currentSeconds = (int) Math.floor(newValue.doubleValue());
+                        int currentMinutes = currentSeconds / 60;
+                        currentSeconds %= 60;
+                        String formattedCurrent = String.format("%02d:%02d", currentMinutes, currentSeconds);
+                        
+                        int totalSeconds = (int) Math.floor(media.getDuration().toSeconds());
+                        int totalMinutes = totalSeconds / 60;
+                        totalSeconds %= 60;
+                        String formattedTotal = String.format("%02d:%02d", totalMinutes, totalSeconds);
+                        
+                        largeTimeLabel.setText(formattedCurrent + " / " + formattedTotal);
+                    }
+                });
+                
+                HBox largeControls = new HBox(10, largePlayBtn, largeStopBtn, largeRotateBtn, largeProgressSlider, largeTimeLabel);
                 largeControls.setAlignment(Pos.CENTER);
+                largeControls.setStyle("-fx-padding: 10px;");
                 HBox.setHgrow(largeProgressSlider, Priority.ALWAYS);
                 
                 VBox largeVBox = new VBox(10, largeMediaView, largeControls);
                 largeVBox.setStyle("-fx-padding: 10px;");
                 VBox.setVgrow(largeMediaView, Priority.ALWAYS);
                 
-                stage.setScene(new javafx.scene.Scene(largeVBox, 900, 700));
+                stage.setScene(new javafx.scene.Scene(largeVBox, 900, 600));
                 stage.show();
             });
             
             // 工具栏
-            HBox controls = new HBox(10, playBtn, stopBtn, rotateBtn, enlargeBtn, progressSlider);
+            HBox controls = new HBox(10, playBtn, stopBtn, rotateBtn, enlargeBtn, progressSlider, timeLabel);
             controls.setAlignment(Pos.CENTER);
+            controls.setStyle("-fx-padding: 10px;");
             HBox.setHgrow(progressSlider, Priority.ALWAYS);
             
             ScrollPane scrollPane = new ScrollPane(mediaView);
             scrollPane.setFitToWidth(true);
             scrollPane.setFitToHeight(true);
+            scrollPane.setStyle("-fx-background-color: #000000;");
             VBox.setVgrow(scrollPane, Priority.ALWAYS);
             
             this.getChildren().addAll(title, scrollPane, controls);
